@@ -86,7 +86,6 @@ rz_bin_sources = [
   'bobj_process_symbol.c',
   'bobj_process_reloc.c',
   'dbginfo.c',
-  'dwarf.c',
   'filter.c',
   'golang.c',
   'relocs_patch.c',
@@ -258,7 +257,9 @@ rz_bin_sources = [
   'pdb/pdb.c',
   'pdb/pdb_downloader.c',
   'pdb/stream_pe.c',
-  'pdb/tpi.c'
+  'pdb/tpi.c',
+
+  'dwarf/dwarf.c',
 ]
 
 rz_bin_inc = [platform_inc, include_directories('format')]
