@@ -1,0 +1,304 @@
+d "add r6, r2" 0062
+d "add r1, #0x00" 0810
+d "add r3, [r2]" 083A
+d "add r2, [r0+]" 082C
+d "add r2, #0xfe00" 06F200FE
+d "add r1, 0x2301" 02F10123
+d "add 0x2301, r1" 04F10123
+
+d "addb rh1, rh0" 0131
+d "addb rl1, #0x01" 0921
+d "addb rh1, [rh0]" 0939
+d "addb rl0, [rh1+]" 090F
+d "addb 0xfe00, #0x11" 07001122
+d "addb 0xfe00, 0x2211" 03001122
+d "addb 0x2211, 0xfe00" 05001122
+
+d "addc r6, r2" 1062
+d "addc r1, #0x00" 1810
+d "addc r3, [r2]" 183A
+d "addc r2, [r0+]" 182C
+d "addc r2, #0xfe00" 16F200FE
+d "addc r1, 0x2301" 12F10123
+d "addc 0x2301, r1" 14F10123
+
+d "addcb rh1, rh0" 1131
+d "addcb rl1, #0x01" 1921
+d "addcb rh1, [rh0]" 1939
+d "addcb rl0, [rh1+]" 190F
+d "addcb 0xfe00, #0x11" 17001122
+d "addcb 0xfe00, 0x2211" 13001122
+d "addcb 0x2211, 0xfe00" 15001122
+
+d "and r6, r2" 6062
+d "and r1, #0x00" 6810
+d "and r3, [r2]" 683A
+d "and r2, [r0+]" 682C
+d "and r2, #0xfe00" 66F200FE
+d "and r1, 0x2301" 62F10123
+d "and 0x2301, r1" 64F10123
+
+d "andb rh1, rh0" 6131
+d "andb rl1, #0x01" 6921
+d "andb rh1, [rh0]" 6939
+d "andb rl0, [rh1+]" 690F
+d "andb 0xfe00, #0x11" 67001122
+d "andb 0xfe00, 0x2211" 63001122
+d "andb 0x2211, 0xfe00" 65001122
+
+d "ashr r7, r10" AC7A
+d "ashr r6, #0x01" BC16
+
+d "atomic #0x01" D110
+d "band r0.1, r0.2" 6AF0F012
+d "band r1.14, r0.7" 6AF1F0E7
+d "band r1.14, r0.7" 6AF1F0E7
+
+d "bclr r2.0" 0EF2
+d "bclr r2.1" 1EF2
+d "bclr r2.2" 2EF2
+d "bclr r2.3" 3EF2
+d "bclr r2.4" 4EF2
+d "bclr r2.5" 5EF2
+d "bclr r2.6" 6EF2
+d "bclr r2.7" 7EF2
+d "bclr r2.8" 8EF2
+d "bclr r2.9" 9EF2
+d "bclr r2.10" AEF2
+d "bclr r2.11" BEF2
+d "bclr r2.12" CEF2
+
+d "bcmp r1.14, r0.7" 2AF1F0E7
+
+d "bfldh r1, #0x80, #0xff"  1AF1FF80
+d "bfldl r1, #0x80, #0xff"  0AF180FF
+
+d "bmov r1.14, r0.7" 4AF1F0E7
+d "bmovn r1.14, r0.7" 3AF1F0E7
+
+d "bor r0.1, r0.2" 5AF0F012
+d "bor r2.1, r0.7" 5AF2F017
+d "bor r1.14, 0xfd00.7" 5AF100E7
+
+d "bset r0.13" DFF0
+d "bset r0.14" EFF0
+d "bset r0.15" FFF0
+d "bset r0.1" 1FF0
+d "bset r2.3" 3FF2
+d "bset 0xfd04.7" 7F02
+d "bset 0xff02.15" FF81
+
+
+d "bxor r2.1, r0.7" 7AF2F017
+d "bxor 0xfd00.7, r1.14" 7A00F17E
+
+d "calla cc_Z/EQ, 0x0660" CA206006
+d "calli cc_Z/EQ, [r3]" AB23
+d "callr -16" BBF0
+d "callr -128" BB80
+d "callr 127" BB7F
+d "callr 16" BB10
+d "calls 0x00, 0x0660" DA006006
+d "cmp r4, r8" 4048
+d "cmp r1, #0x06" 4816
+d "cmp r0, [r2]" 480A
+d "cmp r9, [r0+]" 489C
+d "cmp r1, #0xabcd" 46F1CDAB
+d "cmp r1, 0xabcd" 42F1CDAB
+d "cmpb rl0, rh0" 4101
+d "cmpb rh0, [rl0]" 4918
+d "cmpb rl2, [rl1+]" 494E
+d "cmpb rh0, #0x02" 4912
+d "cmpb 0xfe02, #0xff" 4701FF00
+d "cmpb 0xfe02, 0x12ff" 4301FF12
+d "cmpd1 r2, #0x03" A032
+d "cmpd1 r1, #0x1234" A6F13412
+d "cmpd1 r3, 0xabcd" A2F3CDAB
+d "cmpd2 r1, #0x0a" B0A1
+d "cmpd2 r7, #0x1234" B6F73412
+d "cmpd2 r0, 0xabcd" B2F0CDAB
+d "cmpi1 r2, #0x03" 8032
+d "cmpi1 r1, #0x1234" 86F13412
+d "cmpi1 r3, 0xabcd" 82F3CDAB
+d "cmpi2 r1, #0x0a" 90A1
+d "cmpi2 r7, #0x1234" 96F73412
+d "cmpi2 r0, 0xabcd" 92F0CDAB
+
+d "cpl r4" 9140
+d "cplb rl1" B120
+
+d "diswdt" A55AA5A5
+d "div r1" 4B10
+d "div r1" 4B11
+d "divl r0" 6B00
+d "divlu r4" 7B40
+d "divu r7" 5B70
+
+d "einit" B54AB5B5
+# TODO: EXTR ?
+# TODO: EXTP ?
+# TODO: EXTPR
+# TODO: EXTS
+# TODO: EXTSR
+d "extp r2, #0x01" DC12
+d "extp #0xab03, #0x01" D790AB03
+
+
+d "idle" 87788787
+
+d "jb 0xfd02.3, 4" 8A010430
+d "jbc 0xfd02.3, 4" AA010430
+d "jmpa cc_SLE, 0x0660" EAB06006
+d "jmpi cc_NZ/NE, [r1]" 9C31
+d "jmpi cc_ULE, [r15]" 9CFF
+d "jmpr cc_Z/EQ, 32" 2D20
+d "jmpr cc_UGT, -16" EDF0
+d "jmps 0x00, 0x0660" FA006006
+d "jnb 0xfd02.3, -20" 9A01EC30
+d "jnb 0xfd02.3, 4" 9A010430
+d "jnbs 0xfd02.3, 4" BA010430
+
+d "mov r1, r0" F010
+d "mov r0, #0x01" E010
+d "mov r1, #0x1122" E6F12211
+d "mov r1, [r2]" A812
+d "mov r1, [r2+]" 9812
+d "mov [r1], r2" B812
+d "mov [-r1], r2" 8812
+d "mov [r1], [r2]" C812
+d "mov [r1+], [r2]" D812
+d "mov [r3], [r4+]" E834
+d "mov r0, [r1+#0x1122]" D4012211
+d "mov [r1+#0x1122], r0" C4012211
+d "mov [r2], 0x0660" 84026006
+d "mov 0x0660, [r2]" 94026006
+d "mov r0, 0x2211" F2F01122
+d "mov 0x2211, r0" F6F01122
+
+d "movb rh1, rh0" F131
+d "movb rh7, #0x03" E13F
+d "movb rl0, #0xff" E7F0FF00
+d "movb rh0, [r2]" A912
+d "movb rh0, [r2+]" 9912
+d "movb [r0], rl1" B902
+d "movb [-r0], rl1" 8902
+d "movb [r0], [r2]" C902
+d "movb [r0+], [r2]" D902
+d "movb [r0], [r2+]" E902
+d "movb rl0, [r1+#0x1122]" F4012211
+d "movb [r1+#0x1122], rl0" E4012211
+d "movb [r2], 0x0660" A4026006
+d "movb 0x0660, [r2]" B4026006
+d "movb rl0, 0x11ff" F3F0FF11
+d "movb 0x11ff, rl0" F7F0FF11
+
+d "movbs r1, rl0" D010
+d "movbs 0xfe06, 0x2211" D2031122
+d "movbs 0x2211, 0xfe06" D5031122
+
+d "movbz r1, rl0" C010
+d "movbz 0xfe06, 0x2211" C2031122
+d "movbz 0x2211, 0xfe06" C5031122
+
+d "mul r1, r0" 0B10
+d "mulu r2, r3" 1B23
+
+d "neg r1" 8110
+d "negb rl1" A120
+d "negb rh0" A110
+d "nop" cc00
+
+d "or r5, r1" 7051
+d "or r1, #0x01" 7811
+d "or r0, [r1]" 7809
+d "or r4, [r3+]" 784F
+d "or 0xfe00, #0x2211" 76001122
+d "or 0xfe00, 0x2211" 72001122
+d "or 0x2211, 0xfe00" 74001122
+
+d "orb rh1, rh0" 7131
+d "orb rl1, #0x01" 7921
+d "orb rh1, [rh0]" 7939
+d "orb rl0, [rh1+]" 790F
+d "orb 0xfe00, #0x11" 77001122
+d "orb 0xfe00, 0x2211" 73001122
+d "orb 0x2211, 0xfe00" 75001122
+
+d "pcall r1, 0x4801" E2F10148
+d "pop r0" FCF0
+d "pop r4" FCF4
+d "pop 0xfe12" FC09
+d "prior r1, r0" 2B10
+d "push 0xfe66" EC33
+d "pwrdn" 97689797
+
+d "ret" cb00
+d "reti" fb88
+d "retp r8" EBF8
+d "retp 0xfe30" EB18
+d "rets" DB00
+
+d "rol r0, r2" 0C02
+d "rol r2, #0x0f" 1CF2
+d "ror r3, r4" 2C34
+d "ror r3, #0x04" 3C43
+
+d "scxt r1, #0x4102" C6F10241
+d "scxt r3, 0x3412" D6F31234
+d "shl r0, r1" 4C01
+d "shl r7, #0x01" 5C17
+d "shr r4, r5" 6C45
+d "shr r8, #0x04" 7C48
+d "srst" B748B7B7
+d "srvwdt" A758A7A7
+
+d "sub r3, #0x07" 2837
+d "sub r0, r2" 2002
+d "sub r0, [r1]" 2809
+d "sub r4, [r3+]" 284F
+d "sub 0xfe00, #0x2211" 26001122
+d "sub 0xfe00, 0x2211" 22001122
+d "sub 0x2211, 0xfe00" 24001122
+
+d "subb rh1, rh0" 2131
+d "subb rl1, #0x01" 2921
+d "subb rh1, [rh0]" 2939
+d "subb rl0, [rh1+]" 290F
+d "subb 0xfe00, #0x11" 27001122
+d "subb 0xfe00, 0x2211" 23001122
+d "subb 0x2211, 0xfe00" 25001122
+
+d "subc r3, r0" 3030
+d "subc r2, #0x01" 3821
+d "subc r3, [r1]" 3839
+d "subc r0, [r3+]" 380F
+d "subc 0xfe00, #0x2211" 36001122
+d "subc 0xfe00, 0x2211" 32001122
+d "subc 0x2211, 0xfe00" 34001122
+
+d "subcb rh1, rh0" 3131
+d "subcb rl1, #0x01" 3921
+d "subcb rh1, [rh0]" 3939
+d "subcb rl0, [rh1+]" 390F
+d "subcb 0xfe00, #0x11" 37001122
+d "subcb 0xfe00, 0x2211" 33001122
+d "subcb 0x2211, 0xfe00" 35001122
+
+d "trap #0x0004" 9B01
+d "trap #0x0008" 9B02
+
+d "xor r0, r2" 5002
+d "xor r15, #0x02" 58F2
+d "xor r9, [r0]" 5898
+d "xor r1, [r0+]" 581C
+d "xor r1, #0x1000" 56F10010
+d "xor r3, 0x1000" 52F30010
+d "xor 0x1000, r2" 54F20010
+
+d "xorb rl0, rh0" 5101
+d "xorb rl0, #0x01" 5901
+d "xorb rh1, [rl0]" 5938
+d "xorb rl2, [rh1+]" 594F
+d "xorb rh7, #0x01" 57FF0100
+d "xorb rl7, 0x0201" 53FE0102
+d "xorb 0x0201, rl7" 55FE0102

@@ -11,6 +11,7 @@ sdb_files = [
   'avr-ATmega168',
   'avr-ATTiny48',
   'avr-ATTiny88',
+  'c166-c167cr'
 ]
 
 foreach file : sdb_files

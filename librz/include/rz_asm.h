@@ -223,6 +223,7 @@ extern RzAsmPlugin rz_asm_plugin_arm_cs;
 extern RzAsmPlugin rz_asm_plugin_avr;
 extern RzAsmPlugin rz_asm_plugin_bf;
 extern RzAsmPlugin rz_asm_plugin_null;
+extern RzAsmPlugin rz_asm_plugin_c166;
 extern RzAsmPlugin rz_asm_plugin_chip8;
 extern RzAsmPlugin rz_asm_plugin_cil;
 extern RzAsmPlugin rz_asm_plugin_cr16;
