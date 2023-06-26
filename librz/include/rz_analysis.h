@@ -2208,6 +2208,7 @@ extern RzAnalysisPlugin rz_analysis_plugin_arc;
 extern RzAnalysisPlugin rz_analysis_plugin_arm_cs;
 extern RzAnalysisPlugin rz_analysis_plugin_avr;
 extern RzAnalysisPlugin rz_analysis_plugin_bf;
+extern RzAnalysisPlugin rz_analysis_plugin_c166;
 extern RzAnalysisPlugin rz_analysis_plugin_chip8;
 extern RzAnalysisPlugin rz_analysis_plugin_cil;
 extern RzAnalysisPlugin rz_analysis_plugin_cr16;
