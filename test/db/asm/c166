@@ -1,3 +1,4 @@
+# These are made up from the C166 manual
 d "add r6, r2" 0062
 d "add r1, #0x00" 0810
 d "add r3, [r2]" 083A
@@ -163,8 +164,8 @@ d "mov r0, #0x01" E010
 d "mov r1, #0x1122" E6F12211
 d "mov r1, [r2]" A812
 d "mov r1, [r2+]" 9812
-d "mov [r1], r2" B812
-d "mov [-r1], r2" 8812
+d "mov [r2], r1" B812
+d "mov [-r2], r1" 8812
 d "mov [r1], [r2]" C812
 d "mov [r1+], [r2]" D812
 d "mov [r3], [r4+]" E834
@@ -180,8 +181,8 @@ d "movb rh7, #0x03" E13F
 d "movb rl0, #0xff" E7F0FF00
 d "movb rh0, [r2]" A912
 d "movb rh0, [r2+]" 9912
-d "movb [r0], rl1" B902
-d "movb [-r0], rl1" 8902
+d "movb [r2], rl0" B902
+d "movb [-r2], rl0" 8902
 d "movb [r0], [r2]" C902
 d "movb [r0+], [r2]" D902
 d "movb [r0], [r2+]" E902
@@ -192,11 +193,11 @@ d "movb 0x0660, [r2]" B4026006
 d "movb rl0, 0x11ff" F3F0FF11
 d "movb 0x11ff, rl0" F7F0FF11
 
-d "movbs r1, rl0" D010
+d "movbs r0, rh0" D010
 d "movbs 0xfe06, 0x2211" D2031122
 d "movbs 0x2211, 0xfe06" D5031122
 
-d "movbz r1, rl0" C010
+d "movbz r1, rl0" C001
 d "movbz 0xfe06, 0x2211" C2031122
 d "movbz 0x2211, 0xfe06" C5031122
 
@@ -302,3 +303,38 @@ d "xorb rl2, [rh1+]" 594F
 d "xorb rh7, #0x01" 57FF0100
 d "xorb rl7, 0x0201" 53FE0102
 d "xorb 0x0201, rl7" 55FE0102
+
+# The following are from keil's c166 user guide
+# PWS=0xff10, MDL=0xfe0e
+
+# from Directives/Reference/DISABLE
+d "bfldh 0xff10, #0xf0, #0xf0" 1A88F0F0
+d "mul r8, r9" 0B89
+d "mov r4, 0xfe0e" F2F40EFE
+d "bfldh 0xff10, #0xf0, #0x00" 1A8800F0
+d "ret" CB00
+
+# from Directives/Reference/without NOALIAS
+d "mov r4, 0x0000" F2F40000
+d "mov [r4], 0x0002" 84040200
+d "mov r5, #0x00" E005
+d "mov [r8], r5" B858
+d "mov r5, 0x0002" F2F50200
+d "mov r4, 0x0000" F2F40000
+d "mov [r4+#0x0002], r5" C4540200
+d "mov r8, #0x0002" E6F80200
+d "callr -16" BBF0
+
+# from Directives/Reference/NODDPPSAVE
+# DPP0=0xfe00 DPP3=0xfe06 CP=0xfe10
+d "scxt 0xfe06, #0x0003" C6030300
+d "mov 0x0000, r0" F6F00000
+d "scxt 0xfe10, #0xc000" C60800C0
+d "push 0xfe00" EC00
+
+# from Directives/Reference/NOFIXDPP
+d "add r0, #0xfff6" 06F0F6FF
+d "mov r4, r0" F040
+d "and r4, #0x3fff" 66F4FF3F
+d "mov r5, 0xfe04" F2F504FE
+d "addc r5, #0x0000" 16F50000
