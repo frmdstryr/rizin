@@ -322,14 +322,14 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
     op->addr = addr;
     op->type = RZ_ANALYSIS_OP_TYPE_UNK;
     switch (buf[0]) {
-        case C166_ADD_Rw_Rw:
-        case C166_ADD_Rw_x:
-        case C166_ADDC_Rw_Rw:
-        case C166_ADDC_Rw_x:
-        case C166_ADDB_Rb_Rb:
-        case C166_ADDB_Rb_x:
-        case C166_ADDCB_Rb_Rb:
-        case C166_ADDCB_Rb_x:
+        case C166_ADD_Rwn_Rwm:
+        case C166_ADD_Rwn_x:
+        case C166_ADDC_Rwn_Rwm:
+        case C166_ADDC_Rwn_x:
+        case C166_ADDB_Rbn_Rbm:
+        case C166_ADDB_Rbn_x:
+        case C166_ADDCB_Rbn_Rbm:
+        case C166_ADDCB_Rbn_x:
             op->type = RZ_ANALYSIS_OP_TYPE_ADD;
             break;
         case C166_ADD_mem_reg:
@@ -347,14 +347,14 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->type = RZ_ANALYSIS_OP_TYPE_ADD;
             c166_set_mimo_addr_from_reg(op, buf[1]);
             break;
-        case C166_SUB_Rw_Rw:
-        case C166_SUB_Rw_x:
-        case C166_SUBB_Rb_Rb:
-        case C166_SUBB_Rb_x:
-        case C166_SUBC_Rw_Rw:
-        case C166_SUBC_Rw_x:
-        case C166_SUBCB_Rb_Rb:
-        case C166_SUBCB_Rb_x:
+        case C166_SUB_Rwn_Rwm:
+        case C166_SUB_Rwn_x:
+        case C166_SUBB_Rbn_Rbm:
+        case C166_SUBB_Rbn_x:
+        case C166_SUBC_Rwn_Rwm:
+        case C166_SUBC_Rwn_x:
+        case C166_SUBCB_Rbn_Rbm:
+        case C166_SUBCB_Rbn_x:
             op->type = RZ_ANALYSIS_OP_TYPE_SUB;
             break;
         case C166_SUB_mem_reg:
@@ -372,20 +372,20 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->type = RZ_ANALYSIS_OP_TYPE_SUB;
             c166_set_mimo_addr_from_reg(op, buf[1]);
             break;
-        case C166_MUL_Rw_Rw:
-        case C166_MULU_Rw_Rw:
+        case C166_MUL_Rwn_Rwm:
+        case C166_MULU_Rwn_Rwm:
             op->type = RZ_ANALYSIS_OP_TYPE_MUL;
             break;
-        case C166_DIV_Rw:
-        case C166_DIVL_Rw:
-        case C166_DIVLU_Rw:
-        case C166_DIVU_Rw:
+        case C166_DIV_Rwn:
+        case C166_DIVL_Rwn:
+        case C166_DIVLU_Rwn:
+        case C166_DIVU_Rwn:
             op->type = RZ_ANALYSIS_OP_TYPE_DIV;
             break;
-        case C166_AND_Rw_Rw:
-        case C166_AND_Rw_x:
-        case C166_ANDB_Rb_Rb:
-        case C166_ANDB_Rb_x:
+        case C166_AND_Rwn_Rwm:
+        case C166_AND_Rwn_x:
+        case C166_ANDB_Rbn_Rbm:
+        case C166_ANDB_Rbn_x:
             op->type = RZ_ANALYSIS_OP_TYPE_AND;
             break;
         case C166_AND_mem_reg:
@@ -397,10 +397,10 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->type = RZ_ANALYSIS_OP_TYPE_AND;
             c166_set_mimo_addr_from_reg(op, buf[1]);
             break;
-        case C166_OR_Rw_Rw:
-        case C166_OR_Rw_x:
-        case C166_ORB_Rb_Rb:
-        case C166_ORB_Rb_x:
+        case C166_OR_Rwn_Rwm:
+        case C166_OR_Rwn_x:
+        case C166_ORB_Rbn_Rbm:
+        case C166_ORB_Rbn_x:
             op->type = RZ_ANALYSIS_OP_TYPE_OR;
             break;
         case C166_OR_mem_reg:
@@ -412,10 +412,10 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->type = RZ_ANALYSIS_OP_TYPE_OR;
             c166_set_mimo_addr_from_reg(op, buf[1]);
             break;
-        case C166_XOR_Rw_Rw:
-        case C166_XOR_Rw_x:
-        case C166_XORB_Rb_Rb:
-        case C166_XORB_Rb_x:
+        case C166_XOR_Rwn_Rwm:
+        case C166_XOR_Rwn_x:
+        case C166_XORB_Rbn_Rbm:
+        case C166_XORB_Rbn_x:
             op->type = RZ_ANALYSIS_OP_TYPE_XOR;
             break;
         case C166_XOR_mem_reg:
@@ -489,49 +489,49 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             c166_set_mimo_addr_from_reg(op, buf[1]);
             break;
         }
-        case C166_SHL_Rw_data4:
-        case C166_SHL_Rw_Rw:
+        case C166_SHL_Rwn_data4:
+        case C166_SHL_Rwn_Rwm:
             op->type = RZ_ANALYSIS_OP_TYPE_SHL;
             break;
-        case C166_SHR_Rw_data4:
-        case C166_SHR_Rw_Rw:
-        case C166_ASHR_Rw_data4:
-        case C166_ASHR_Rw_Rw:
+        case C166_SHR_Rwn_data4:
+        case C166_SHR_Rwn_Rwm:
+        case C166_ASHR_Rwn_data4:
+        case C166_ASHR_Rwn_Rwm:
             op->type = RZ_ANALYSIS_OP_TYPE_SHR;
             break;
-        case C166_ROL_Rw_data4:
-        case C166_ROL_Rw_Rw:
+        case C166_ROL_Rwn_data4:
+        case C166_ROL_Rwn_Rwm:
             op->type = RZ_ANALYSIS_OP_TYPE_ROL;
             break;
-        case C166_ROR_Rw_data4:
-        case C166_ROR_Rw_Rw:
+        case C166_ROR_Rwn_data4:
+        case C166_ROR_Rwn_Rwm:
             op->type = RZ_ANALYSIS_OP_TYPE_ROR;
             break;
 
-        case C166_MOV_Rw_Rw:
-        case C166_MOV_Rw_data4:
-        case C166_MOV_Rw_oRw:
-        case C166_MOV_Rw_oRwp:
-        case C166_MOV_noRw_Rw:
-        case C166_MOV_oRw_Rw:
-        case C166_MOV_oRw_oRw:
-        case C166_MOV_oRw_oRwp:
-        case C166_MOV_oRwp_oRw:
-        case C166_MOVB_Rb_Rb:
-        case C166_MOVB_Rb_data4:
-        case C166_MOVB_Rb_oRw:
-        case C166_MOVB_Rb_oRwp:
-        case C166_MOVB_noRw_Rb:
-        case C166_MOVB_oRw_Rb:
-        case C166_MOVB_oRw_oRw:
-        case C166_MOVB_oRw_oRwp:
-        case C166_MOVB_oRwp_oRw:
-        case C166_MOVBS_Rw_Rb:
-        case C166_MOVBZ_Rw_Rb:
-        case C166_MOV_Rw_or_oRw_data16:
-        case C166_MOV_oRw_data16_or_Rb:
-        case C166_MOVB_Rb_or_oRw_data16:
-        case C166_MOVB_oRw_data16_or_Rb:
+        case C166_MOV_Rwn_Rwm:
+        case C166_MOV_Rwn_data4:
+        case C166_MOV_Rwn_oRwm:
+        case C166_MOV_Rwn_oRwmp:
+        case C166_MOV_noRwm_Rwn:
+        case C166_MOV_oRwm_Rwn:
+        case C166_MOV_oRwn_oRwm:
+        case C166_MOV_oRwn_oRwmp:
+        case C166_MOV_oRwnp_oRwm:
+        case C166_MOVB_Rbn_Rbm:
+        case C166_MOVB_Rbn_data4:
+        case C166_MOVB_Rbn_oRwm:
+        case C166_MOVB_Rbn_oRwmp:
+        case C166_MOVB_noRwm_Rbn:
+        case C166_MOVB_oRwm_Rbn:
+        case C166_MOVB_oRwn_oRwm:
+        case C166_MOVB_oRwn_oRwmp:
+        case C166_MOVB_oRwnp_oRwm:
+        case C166_MOVBS_Rwn_Rbm:
+        case C166_MOVBZ_Rwn_Rbm:
+        case C166_MOV_Rwn_oRwm_data16:
+        case C166_MOV_oRwm_data16_Rwn:
+        case C166_MOVB_Rbn_oRwm_data16:
+        case C166_MOVB_oRwm_data16_Rbn:
             op->type = RZ_ANALYSIS_OP_TYPE_MOV;
             break;
         case C166_MOV_reg_data16:
@@ -549,10 +549,10 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->ptr = rz_read_at_le16(buf, 2);
             break;
         }
-        case C166_MOV_mem_oRw:
-        case C166_MOVB_mem_oRw:
-        case C166_MOV_oRw_mem:
-        case C166_MOVB_oRw_mem: {
+        case C166_MOV_mem_oRwn:
+        case C166_MOVB_mem_oRwn:
+        case C166_MOV_oRwn_mem:
+        case C166_MOVB_oRwn_mem: {
             op->type = RZ_ANALYSIS_OP_TYPE_MOV;
             op->mmio_address = rz_read_at_le16(buf, 2);
             break;
@@ -564,29 +564,29 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
         //     op->type = RZ_ANALYSIS_OP_TYPE_NOT; // Correct?
         //     break;
 
-        case C166_CPL_Rw:
-        case C166_CPLB_Rb:
+        case C166_CPL_Rwn:
+        case C166_CPLB_Rbn:
             op->type = RZ_ANALYSIS_OP_TYPE_CPL;
             break;
 
-        case C166_CMP_Rw_Rw:
-        case C166_CMP_Rw_x:
-        case C166_CMPB_Rb_Rb:
-        case C166_CMPB_Rb_x:
-        case C166_CMPD1_Rw_data4:
-        case C166_CMPD2_Rw_data4:
-        case C166_CMPI1_Rw_data4:
-        case C166_CMPI2_Rw_data4:
-        case C166_CMPD1_Rw_data16:
-        case C166_CMPD2_Rw_data16:
-        case C166_CMPI1_Rw_data16:
-        case C166_CMPI2_Rw_data16:
+        case C166_CMP_Rwn_Rwm:
+        case C166_CMP_Rwn_x:
+        case C166_CMPB_Rbn_Rbm:
+        case C166_CMPB_Rbn_x:
+        case C166_CMPD1_Rwn_data4:
+        case C166_CMPD2_Rwn_data4:
+        case C166_CMPI1_Rwn_data4:
+        case C166_CMPI2_Rwn_data4:
+        case C166_CMPD1_Rwn_data16:
+        case C166_CMPD2_Rwn_data16:
+        case C166_CMPI1_Rwn_data16:
+        case C166_CMPI2_Rwn_data16:
             op->type = RZ_ANALYSIS_OP_TYPE_CMP;
             break;
-        case C166_CMPD1_Rw_mem:
-        case C166_CMPD2_Rw_mem:
-        case C166_CMPI1_Rw_mem:
-        case C166_CMPI2_Rw_mem:
+        case C166_CMPD1_Rwn_mem:
+        case C166_CMPD2_Rwn_mem:
+        case C166_CMPI1_Rwn_mem:
+        case C166_CMPI2_Rwn_mem:
             op->type = RZ_ANALYSIS_OP_TYPE_CMP;
             op->mmio_address = rz_read_at_le16(buf, 2);
             break;
@@ -603,7 +603,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
         case C166_JB_bitaddr_rel:
         case C166_JBC_bitaddr_rel:
             op->type = RZ_ANALYSIS_OP_TYPE_RCJMP;
-            op->cond = RZ_TYPE_COND_EQ; // TODO: Is this correct?
+            op->cond = RZ_TYPE_COND_EQ;
             op->jump = addr + op->size + (2 * ((st8) buf[2]));
             op->fail = addr + op->size;
             c166_set_mimo_addr_from_reg(op, buf[1]);
@@ -611,7 +611,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
         case C166_JNB_bitaddr_rel:
         case C166_JNBS_bitaddr_rel:
             op->type = RZ_ANALYSIS_OP_TYPE_RCJMP;
-            op->cond = RZ_TYPE_COND_NE; // TODO: Is this correct?
+            op->cond = RZ_TYPE_COND_NE;
             op->jump = addr + op->size + (2 * ((st8) buf[2]));
             op->fail = addr + op->size;
             c166_set_mimo_addr_from_reg(op, buf[1]);
@@ -622,7 +622,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->jump = rz_read_at_le16(buf, 2);
             op->fail = addr + op->size;
             break;
-        case C166_JMPI_cc_oRw:
+        case C166_JMPI_cc_oRwn:
             op->type = RZ_ANALYSIS_OP_TYPE_IRJMP;
             op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
             op->reg = c166_rw[buf[1] & 0xF];
@@ -651,7 +651,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             break;
         case C166_JMPS_seg_caddr:
             op->type = RZ_ANALYSIS_OP_TYPE_JMP;
-            op->jump = rz_read_at_le16(buf, 2);
+            op->jump = (((ut32) buf[1]) << 16) | ((ut32) rz_read_at_le16(buf, 2));
             break;
         case C166_CALLA_cc_caddr:
             op->type = RZ_ANALYSIS_OP_TYPE_CCALL;
@@ -659,7 +659,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->jump = rz_read_at_le16(buf, 2);
             op->fail = addr + op->size;
             break;
-        case C166_CALLI_cc_Rw:
+        case C166_CALLI_cc_Rwn:
             op->type = RZ_ANALYSIS_OP_TYPE_IRCALL;
             op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
             op->reg = c166_rw[buf[1] & 0xF];
@@ -670,9 +670,13 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             op->jump = addr + op->size + (2 * ((st8) buf[1]));
             break;
         case C166_CALLS_seg_caddr:
+            op->type = RZ_ANALYSIS_OP_TYPE_CALL;
+            op->jump = (((ut32) buf[1]) << 16) | ((ut32) rz_read_at_le16(buf, 2));
+            break;
         case C166_PCALL_reg_caddr:
             op->type = RZ_ANALYSIS_OP_TYPE_CALL;
             op->jump = rz_read_at_le16(buf, 2);
+            c166_set_mimo_addr_from_reg(op, buf[1]);
             break;
     }
     return op->size;
