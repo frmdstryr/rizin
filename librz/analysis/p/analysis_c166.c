@@ -10,251 +10,6 @@
 
 #include "../asm/arch/c166/c166_dis.h"
 
-// static int c166_op_size(ut8 op) {
-//     switch (op) {
-//         case C166_ADD_Rw_Rw:
-//         case C166_ADD_Rw_x:
-//         case C166_ADDC_Rw_Rw:
-//         case C166_ADDC_Rw_x:
-//         case C166_ADDB_Rb_Rb:
-//         case C166_ADDB_Rb_x:
-//         case C166_ADDCB_Rb_Rb:
-//         case C166_ADDCB_Rb_x:
-//         case C166_AND_Rw_Rw:
-//         case C166_AND_Rw_x:
-//         case C166_ANDB_Rb_Rb:
-//         case C166_ANDB_Rb_x:
-//         case C166_ASHR_Rw_Rw:
-//         case C166_ASHR_Rw_data4:
-//         case C166_ATOMIC_or_EXTR_irang2:
-//         case C166_BCLR_bitoff0:
-//         case C166_BCLR_bitoff1:
-//         case C166_BCLR_bitoff2:
-//         case C166_BCLR_bitoff3:
-//         case C166_BCLR_bitoff4:
-//         case C166_BCLR_bitoff5:
-//         case C166_BCLR_bitoff6:
-//         case C166_BCLR_bitoff7:
-//         case C166_BCLR_bitoff8:
-//         case C166_BCLR_bitoff9:
-//         case C166_BCLR_bitoff10:
-//         case C166_BCLR_bitoff11:
-//         case C166_BCLR_bitoff12:
-//         case C166_BCLR_bitoff13:
-//         case C166_BCLR_bitoff14:
-//         case C166_BCLR_bitoff15:
-//         case C166_BSET_bitoff0:
-//         case C166_BSET_bitoff1:
-//         case C166_BSET_bitoff2:
-//         case C166_BSET_bitoff3:
-//         case C166_BSET_bitoff4:
-//         case C166_BSET_bitoff5:
-//         case C166_BSET_bitoff6:
-//         case C166_BSET_bitoff7:
-//         case C166_BSET_bitoff8:
-//         case C166_BSET_bitoff9:
-//         case C166_BSET_bitoff10:
-//         case C166_BSET_bitoff11:
-//         case C166_BSET_bitoff12:
-//         case C166_BSET_bitoff13:
-//         case C166_BSET_bitoff14:
-//         case C166_BSET_bitoff15:
-//         case C166_CALLI_cc_Rw:
-//         case C166_CALLR_rel:
-//         case C166_CMP_Rw_Rw:
-//         case C166_CMP_Rw_x:
-//         case C166_CMPB_Rb_Rb:
-//         case C166_CMPB_Rb_x:
-//         case C166_CMPD1_Rw_data4:
-//         case C166_CMPD2_Rw_data4:
-//         case C166_CMPI1_Rw_data4:
-//         case C166_CMPI2_Rw_data4:
-//         case C166_CPL_Rw:
-//         case C166_CPLB_Rb:
-//         case C166_DIV_Rw:
-//         case C166_DIVLU_Rw:
-//         case C166_DIVL_Rw:
-//         case C166_DIVU_Rw:
-//         case C166_EXTP_Rw_irang2:
-//         case C166_JMPI_cc_oRw:
-//         case C166_JMPR_cc_C_or_ULT_rel:
-//         case C166_JMPR_cc_EQ_or_Z_rel:
-//         case C166_JMPR_cc_NC_or_NGE_rel:
-//         case C166_JMPR_cc_NET_rel:
-//         case C166_JMPR_cc_NE_or_NZ_rel:
-//         case C166_JMPR_cc_NN_rel:
-//         case C166_JMPR_cc_NV_rel:
-//         case C166_JMPR_cc_N_rel:
-//         case C166_JMPR_cc_SGE_rel:
-//         case C166_JMPR_cc_SGT_rel:
-//         case C166_JMPR_cc_SLE_rel:
-//         case C166_JMPR_cc_SLT_rel:
-//         case C166_JMPR_cc_UC_rel:
-//         case C166_JMPR_cc_UGT_rel:
-//         case C166_JMPR_cc_ULE_rel:
-//         case C166_JMPR_cc_V_rel:
-//         case C166_MOV_Rw_Rw:
-//         case C166_MOV_Rw_data4:
-//         case C166_MOV_Rw_oRw:
-//         case C166_MOV_Rw_oRwp:
-//         case C166_MOV_noRw_Rw:
-//         case C166_MOV_oRw_Rw:
-//         case C166_MOV_oRw_oRw:
-//         case C166_MOV_oRw_oRwp:
-//         case C166_MOV_oRwp_oRw:
-//         case C166_MOVB_Rb_Rb:
-//         case C166_MOVB_Rb_data4:
-//         case C166_MOVB_Rb_oRw:
-//         case C166_MOVB_Rb_oRwp:
-//         case C166_MOVB_noRw_Rb:
-//         case C166_MOVB_oRw_Rb:
-//         case C166_MOVB_oRw_oRw:
-//         case C166_MOVB_oRw_oRwp:
-//         case C166_MOVB_oRwp_oRw:
-//         case C166_MOVBS_Rw_Rb:
-//         case C166_MOVBZ_Rw_Rb:
-//         case C166_MUL_Rw_Rw:
-//         case C166_MULU_Rw_Rw:
-//         case C166_NEG_Rw:
-//         case C166_NEGB_Rb:
-//         case C166_NOP:
-//         case C166_OR_Rw_Rw:
-//         case C166_OR_Rw_x:
-//         case C166_ORB_Rb_Rb:
-//         case C166_ORB_Rb_x:
-//         case C166_POP_reg:
-//         case C166_PRIOR_Rw_Rw:
-//         case C166_PUSH_reg:
-//         case C166_RET:
-//         case C166_RETI:
-//         case C166_RETP_reg:
-//         case C166_RETS:
-//         case C166_ROL_Rw_Rw:
-//         case C166_ROL_Rw_data4:
-//         case C166_ROR_Rw_Rw:
-//         case C166_ROR_Rw_data4:
-//         case C166_SHL_Rw_Rw:
-//         case C166_SHL_Rw_data4:
-//         case C166_SHR_Rw_Rw:
-//         case C166_SHR_Rw_data4:
-//         case C166_SUB_Rw_Rw:
-//         case C166_SUB_Rw_x:
-//         case C166_SUBB_Rb_Rb:
-//         case C166_SUBB_Rb_x:
-//         case C166_SUBC_Rw_Rw:
-//         case C166_SUBC_Rw_x:
-//         case C166_SUBCB_Rb_Rb:
-//         case C166_SUBCB_Rb_x:
-//         case C166_TRAP_trap7:
-//         case C166_XOR_Rw_Rw:
-//         case C166_XOR_Rw_x:
-//         case C166_XORB_Rb_Rb:
-//         case C166_XORB_Rb_x:
-//             return 2;
-//         case C166_ADD_mem_reg:
-//         case C166_ADD_reg_data16:
-//         case C166_ADD_reg_mem:
-//         case C166_ADDB_mem_reg:
-//         case C166_ADDB_reg_data8:
-//         case C166_ADDB_reg_mem:
-//         case C166_ADDC_mem_reg:
-//         case C166_ADDC_reg_data16:
-//         case C166_ADDC_reg_mem:
-//         case C166_ADDCB_mem_reg:
-//         case C166_ADDCB_reg_data8:
-//         case C166_ADDCB_reg_mem:
-//         case C166_AND_mem_reg:
-//         case C166_AND_reg_data16:
-//         case C166_AND_reg_mem:
-//         case C166_ANDB_mem_reg:
-//         case C166_ANDB_reg_data8:
-//         case C166_ANDB_reg_mem:
-//         case C166_BAND_bitaddr_bitaddr:
-//         case C166_BCMP_bitaddr_bitaddr:
-//         case C166_BFLDH_bitoff_x:
-//         case C166_BFLDL_bitoff_x:
-//         case C166_BMOV_bitaddr_bitaddr:
-//         case C166_BMOVN_bitaddr_bitaddr:
-//         case C166_BOR_bitaddr_bitaddr:
-//         case C166_BXOR_bitaddr_bitaddr:
-//         case C166_CALLA_cc_caddr:
-//         case C166_CALLS_seg_caddr:
-//         case C166_CMP_reg_data16:
-//         case C166_CMP_reg_mem:
-//         case C166_CMPB_reg_data8:
-//         case C166_CMPB_reg_mem:
-//         case C166_CMPD1_Rw_data16:
-//         case C166_CMPD1_Rw_mem:
-//         case C166_CMPD2_Rw_data16:
-//         case C166_CMPD2_Rw_mem:
-//         case C166_CMPI1_Rw_data16:
-//         case C166_CMPI1_Rw_mem:
-//         case C166_CMPI2_Rw_data16:
-//         case C166_CMPI2_Rw_mem:
-//         case C166_DISWDT:
-//         case C166_EINIT:
-//         case C166_EXTP_pag10_or_seg8_irang2:
-//         case C166_IDLE:
-//         case C166_JBC_bitaddr_rel:
-//         case C166_JB_bitaddr_rel:
-//         case C166_JMPA_cc_caddr:
-//         case C166_JMPS_seg_caddr:
-//         case C166_JNBS_bitaddr_rel:
-//         case C166_JNB_bitaddr_rel:
-//         case C166_MOV_Rw_or_oRw_data16:
-//         case C166_MOV_mem_oRw:
-//         case C166_MOV_mem_reg:
-//         case C166_MOV_oRw_data16_or_Rb:
-//         case C166_MOV_oRw_mem:
-//         case C166_MOV_reg_data16:
-//         case C166_MOV_reg_mem:
-//         case C166_MOVB_Rb_or_oRw_data16:
-//         case C166_MOVB_mem_oRw:
-//         case C166_MOVB_mem_reg:
-//         case C166_MOVB_oRw_data16_or_Rb:
-//         case C166_MOVB_oRw_mem:
-//         case C166_MOVB_reg_data8:
-//         case C166_MOVB_reg_mem:
-//         case C166_MOVBS_mem_reg:
-//         case C166_MOVBS_reg_mem:
-//         case C166_MOVBZ_mem_reg:
-//         case C166_MOVBZ_reg_mem:
-//         case C166_OR_mem_reg:
-//         case C166_OR_reg_data16:
-//         case C166_OR_reg_mem:
-//         case C166_ORB_mem_reg:
-//         case C166_ORB_reg_data8:
-//         case C166_ORB_reg_mem:
-//         case C166_PCALL_reg_caddr:
-//         case C166_PWRDN:
-//         case C166_SCXT_reg_data16:
-//         case C166_SCXT_reg_mem:
-//         case C166_SRST:
-//         case C166_SRVWDT:
-//         case C166_SUB_mem_reg:
-//         case C166_SUB_reg_data16:
-//         case C166_SUB_reg_mem:
-//         case C166_SUBC_mem_reg:
-//         case C166_SUBC_reg_data16:
-//         case C166_SUBC_reg_mem:
-//         case C166_SUBB_mem_reg:
-//         case C166_SUBB_reg_data8:
-//         case C166_SUBB_reg_mem:
-//         case C166_SUBCB_mem_reg:
-//         case C166_SUBCB_reg_data8:
-//         case C166_SUBCB_reg_mem:
-//         case C166_XOR_mem_reg:
-//         case C166_XOR_reg_data16:
-//         case C166_XOR_reg_mem:
-//         case C166_XORB_mem_reg:
-//         case C166_XORB_reg_data8:
-//         case C166_XORB_reg_mem:
-//             return 4;
-//         default:
-//             return -1;
-//     }
-// }
-
 static RzTypeCond c166_cc_to_cond(ut8 cc) {
     // See table 5 in C166 ISM
     switch (cc & 0xF) {
@@ -310,17 +65,29 @@ static void c166_set_mimo_addr_from_bitoff(RzAnalysisOp *op, ut16 reg) {
     }
 }
 
+static void c166_set_jump_target_from_caddr(RzAnalysisOp *op, ut16 target) {
+    // TODO: Is this correct?
+    const ut32 segment = op->addr & 0xFF0000;
+    op->jump = segment | (target & 0xFFFE);
+}
+
 static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *buf, int len, RzAnalysisOpMask mask) {
     struct c166_cmd cmd;
     if (!op) {
 		return 1;
 	}
-	op->size = c166_decode_command(buf, &cmd, len);
-    if (op->size < 0) {
-        return -1;
+
+    op->type = RZ_ANALYSIS_OP_TYPE_UNK;
+    op->family = RZ_ANALYSIS_OP_FAMILY_CPU;
+
+	const ut8 size = c166_decode_command(buf, &cmd, len);
+    if (size < 0) {
+        return size;
     }
     op->addr = addr;
     op->type = RZ_ANALYSIS_OP_TYPE_UNK;
+    op->size = size;
+    op->nopcode = size;
     switch (buf[0]) {
         case C166_ADD_Rwn_Rwm:
         case C166_ADD_Rwn_x:
@@ -546,7 +313,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
         case C166_MOVBZ_mem_reg: {
             op->type = RZ_ANALYSIS_OP_TYPE_MOV;
             c166_set_mimo_addr_from_reg(op, buf[1]);
-            op->ptr = rz_read_at_le16(buf, 2);
+            //op->ptr = rz_read_at_le16(buf, 2);
             break;
         }
         case C166_MOV_mem_oRwn:
@@ -619,7 +386,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
         case C166_JMPA_cc_caddr:
             op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
             op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
-            op->jump = rz_read_at_le16(buf, 2);
+            c166_set_jump_target_from_caddr(op, rz_read_at_le16(buf, 2));
             op->fail = addr + op->size;
             break;
         case C166_JMPI_cc_oRwn:
@@ -656,7 +423,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
         case C166_CALLA_cc_caddr:
             op->type = RZ_ANALYSIS_OP_TYPE_CCALL;
             op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
-            op->jump = rz_read_at_le16(buf, 2);
+            c166_set_jump_target_from_caddr(op, rz_read_at_le16(buf, 2));
             op->fail = addr + op->size;
             break;
         case C166_CALLI_cc_Rwn:
@@ -675,7 +442,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
             break;
         case C166_PCALL_reg_caddr:
             op->type = RZ_ANALYSIS_OP_TYPE_CALL;
-            op->jump = rz_read_at_le16(buf, 2);
+            c166_set_jump_target_from_caddr(op, rz_read_at_le16(buf, 2));
             c166_set_mimo_addr_from_reg(op, buf[1]);
             break;
     }
