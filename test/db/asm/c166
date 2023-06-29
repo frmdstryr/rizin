@@ -136,13 +136,9 @@ d "divlu r4" 7B40
 d "divu r7" 5B70
 
 d "einit" B54AB5B5
-# TODO: EXTR ?
-# TODO: EXTP ?
-# TODO: EXTPR
-# TODO: EXTS
-# TODO: EXTSR
-d "extp r2, #0x01" DC12
-d "extp #0xab03, #0x01" D790AB03
+d "exts r2, #0x01" DC02
+d "extp r5, #0x02" DC55
+d "extsr #0xab03, #0x02" D790AB03
 
 
 d "idle" 87788787
@@ -338,3 +334,10 @@ d "mov r4, r0" F040
 d "and r4, #0x3fff" 66F4FF3F
 d "mov r5, 0xfe04" F2F504FE
 d "addc r5, #0x0000" 16F50000
+
+# from Directives/Reference/SAVESYS
+d "mov [-r0], r13" 88D0
+d "mov [-r0], r14" 88E0
+
+# from Inline asm
+d "exts r3, #0x01" DC03
