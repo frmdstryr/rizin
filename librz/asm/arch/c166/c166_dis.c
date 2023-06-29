@@ -535,7 +535,7 @@ static int c166_instr_reg(struct c166_cmd *cmd, const char *instr, ut8 reg, bool
 	char tmp[12];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s", c166_reg(tmp, reg, byte, cmd->esfr));
-	return 4;
+	return 2;
 }
 
 static int c166_instr_reg_data16(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 data, bool byte) {
