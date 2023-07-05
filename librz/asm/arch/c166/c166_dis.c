@@ -510,10 +510,14 @@ static int c166_instr_rw_irang2(struct c166_cmd *cmd, const char *instr, ut8 op)
 	return 2;
 }
 
-static int c166_instr_pag_irang2(struct c166_cmd *cmd, const char *instr, ut8 op, ut8 op2, ut8 op3) {
+static int c166_instr_seg_or_pag_irang2(struct c166_cmd *cmd, const char *instr, ut8 op, ut16 data, bool seg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 irang2 = ((op >> 4) & 0b0011) + 1;
-	snprintf(cmd->operands, C166_MAX_OPT, "#0x%02x%02x, #0x%02x", op2, op3 & 0x3, irang2);
+	if (seg) {
+		snprintf(cmd->operands, C166_MAX_OPT, "#0x%02x, #0x%02x", data & 0xFF, irang2);
+	} else {
+		snprintf(cmd->operands, C166_MAX_OPT, "#0x%04x, #0x%02x", data & 0x03FF, irang2);
+	}
 	return 4;
 }
 
@@ -804,9 +808,11 @@ int c166_decode_command(const ut8 *instr, struct c166_cmd *cmd, int len) {
 		case C166_BFLDL_bitoff_x:
 			return c166_instr_bfld(cmd, "bfldl", instr[1], instr[2], instr[3], false);
 
-		case C166_EXTP_or_EXTS_pag10_or_seg8_irang2:
-			return c166_instr_pag_irang2(cmd, c166_extx_names[(instr[1] >> 6) & 0b11], instr[1], instr[2], instr[3]);
-
+		case C166_EXTP_or_EXTS_pag10_or_seg8_irang2: {
+			const ut8 sub_op = (instr[1] >> 6) & 0b11;
+			bool seg = (sub_op == 0b00) || (sub_op == 0b10);
+			return c166_instr_seg_or_pag_irang2(cmd, c166_extx_names[sub_op], instr[1], rz_read_at_le16(instr, 2), seg);
+		}
 		case C166_SRST:
 			if ((instr[1] == 0x48) && (instr[2] == 0xB7) && (instr[3] == 0xB7))
 				return c166_simple_instr(cmd, "srst", 4);
