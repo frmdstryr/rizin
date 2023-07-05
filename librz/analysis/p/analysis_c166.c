@@ -66,14 +66,61 @@ static void c166_set_jump_target_from_caddr(RzAnalysisOp *op, ut16 target) {
 	op->jump = segment | (target & 0xFFFE);
 }
 
+
+static RzAnalysisValue* c166_new_reg_value(ut8 reg) {
+	static RzRegItem r;
+	RzAnalysisValue *val = rz_analysis_value_new();
+	val->type = RZ_ANALYSIS_VAL_REG;
+	if (reg < 0xF0) {
+		//op->mmio_address = 0xFE00 + (2 * reg);
+		val->base = 0xFE00 + (2 * reg);
+	} else {
+		r.name = c166_rw[reg & 0xF];
+		val->reg = &r;
+	}
+	return val;
+}
+
+static RzAnalysisValue* c166_new_mem_value(ut16 mem) {
+	static RzRegItem r;
+	ZERO_FILL(r);
+	RzAnalysisValue *val = rz_analysis_value_new();
+	val->type = RZ_ANALYSIS_VAL_MEM;
+	if (mem < 0x4000) {
+		r.name = "DDP0";
+		val->reg = &r;
+	} else if (mem < 0x8000) {
+		r.name = "DDP1";
+		val->reg = &r;
+	} else if (mem < 0xC000) {
+		r.name = "DDP2";
+		val->reg = &r;
+	} else {
+		r.name = "DDP3";
+		val->reg = &r;
+	}
+	val->delta = mem & 0x3FFF;
+	return val;
+}
+
+static RzAnalysisValue* c166_new_imm_value(ut16 data, bool absolute) {
+	RzAnalysisValue *val = rz_analysis_value_new();
+	val->type = RZ_ANALYSIS_VAL_IMM;
+	val->imm = data;
+	val->absolute = absolute;
+	return val;
+}
+
+
 static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *buf, int len, RzAnalysisOpMask mask) {
 	struct c166_cmd cmd;
 	if (!op) {
 		return 1;
 	}
 
-	op->type = RZ_ANALYSIS_OP_TYPE_UNK;
-	op->family = RZ_ANALYSIS_OP_FAMILY_CPU;
+	if (analysis->pcalign == 0) {
+		analysis->pcalign = 2;
+	}
 
 	const ut8 size = c166_decode_command(buf, &cmd, len);
 	if (size < 0) {
@@ -85,30 +132,45 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	op->nopcode = size;
 	switch (buf[0]) {
 	case C166_ADD_Rwn_Rwm:
-	case C166_ADD_Rwn_x:
 	case C166_ADDC_Rwn_Rwm:
-	case C166_ADDC_Rwn_x:
 	case C166_ADDB_Rbn_Rbm:
-	case C166_ADDB_Rbn_x:
 	case C166_ADDCB_Rbn_Rbm:
+	case C166_ADD_Rwn_x:
+	case C166_ADDC_Rwn_x:
+	case C166_ADDB_Rbn_x:
 	case C166_ADDCB_Rbn_x:
 		op->type = RZ_ANALYSIS_OP_TYPE_ADD;
 		break;
 	case C166_ADD_mem_reg:
-	case C166_ADD_reg_data16:
 	case C166_ADD_reg_mem:
 	case C166_ADDB_mem_reg:
-	case C166_ADDB_reg_data8:
 	case C166_ADDB_reg_mem:
 	case C166_ADDC_mem_reg:
-	case C166_ADDC_reg_data16:
 	case C166_ADDC_reg_mem:
 	case C166_ADDCB_mem_reg:
-	case C166_ADDCB_reg_data8:
 	case C166_ADDCB_reg_mem:
 		op->type = RZ_ANALYSIS_OP_TYPE_ADD;
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
+	case C166_ADD_reg_data16:
+	case C166_ADDC_reg_data16:
+		op->type = RZ_ANALYSIS_OP_TYPE_ADD;
+		if (buf[1] > 0xF0) {
+			op->reg = c166_rb[buf[1] & 0xF];
+		}
+		op->val = rz_read_at_le16(buf, 2);
+		c166_set_mimo_addr_from_reg(op, buf[1]);
+		break;
+	case C166_ADDB_reg_data8:
+	case C166_ADDCB_reg_data8:
+		op->type = RZ_ANALYSIS_OP_TYPE_ADD;
+		if (buf[1] > 0xF0) {
+			op->reg = c166_rb[buf[1] & 0xF];
+		}
+		op->val = buf[2];
+		c166_set_mimo_addr_from_reg(op, buf[1]);
+		break;
+
 	case C166_SUB_Rwn_Rwm:
 	case C166_SUB_Rwn_x:
 	case C166_SUBB_Rbn_Rbm:
@@ -297,20 +359,35 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
 		break;
 	case C166_MOV_reg_data16:
-	case C166_MOV_reg_mem:
+		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
+		op->dst = c166_new_reg_value(buf[1]);
+		op->src[0] = c166_new_imm_value(rz_read_at_le16(buf, 2), true);
+		c166_set_mimo_addr_from_reg(op, buf[1]);
+		break;
 	case C166_MOVB_reg_data8:
+		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
+		op->dst = c166_new_reg_value(buf[1]);
+		op->src[0] = c166_new_imm_value(rz_read_at_le16(buf, 2) & 0xFF, true);
+		c166_set_mimo_addr_from_reg(op, buf[1]);
+		break;
+	case C166_MOV_reg_mem:
 	case C166_MOVB_reg_mem:
 	case C166_MOVBS_reg_mem:
 	case C166_MOVBZ_reg_mem:
+		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
+		op->dst = c166_new_reg_value(buf[1]);
+		op->src[0] = c166_new_mem_value(rz_read_at_le16(buf, 2));
+		c166_set_mimo_addr_from_reg(op, buf[1]);
+		break;
 	case C166_MOV_mem_reg:
 	case C166_MOVB_mem_reg:
 	case C166_MOVBS_mem_reg:
-	case C166_MOVBZ_mem_reg: {
+	case C166_MOVBZ_mem_reg:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
+		op->src[0] = c166_new_reg_value(buf[1]);
+		op->dst = c166_new_mem_value(rz_read_at_le16(buf, 2));
 		c166_set_mimo_addr_from_reg(op, buf[1]);
-		// op->ptr = rz_read_at_le16(buf, 2);
 		break;
-	}
 	case C166_MOV_mem_oRwn:
 	case C166_MOVB_mem_oRwn:
 	case C166_MOV_oRwn_mem:
@@ -326,14 +403,16 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		//     break;
 
 	case C166_CPL_Rwn:
+		op->type = RZ_ANALYSIS_OP_TYPE_CPL;
+		op->reg = c166_rw[(buf[1] >> 4) & 0xF];
+		break;
 	case C166_CPLB_Rbn:
 		op->type = RZ_ANALYSIS_OP_TYPE_CPL;
+		op->reg = c166_rb[(buf[1] >> 4) & 0xF];
 		break;
 
 	case C166_CMP_Rwn_Rwm:
 	case C166_CMP_Rwn_x:
-	case C166_CMPB_Rbn_Rbm:
-	case C166_CMPB_Rbn_x:
 	case C166_CMPD1_Rwn_data4:
 	case C166_CMPD2_Rwn_data4:
 	case C166_CMPI1_Rwn_data4:
@@ -343,12 +422,20 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_CMPI1_Rwn_data16:
 	case C166_CMPI2_Rwn_data16:
 		op->type = RZ_ANALYSIS_OP_TYPE_CMP;
+		op->reg = c166_rw[(buf[1] >> 4) & 0xF];
 		break;
+	case C166_CMPB_Rbn_Rbm:
+	case C166_CMPB_Rbn_x:
+		op->type = RZ_ANALYSIS_OP_TYPE_CMP;
+		op->reg = c166_rb[(buf[1] >> 4) & 0xF];
+		break;
+
 	case C166_CMPD1_Rwn_mem:
 	case C166_CMPD2_Rwn_mem:
 	case C166_CMPI1_Rwn_mem:
 	case C166_CMPI2_Rwn_mem:
 		op->type = RZ_ANALYSIS_OP_TYPE_CMP;
+		op->reg = c166_rw[buf[1] & 0xF];
 		op->mmio_address = rz_read_at_le16(buf, 2);
 		break;
 	case C166_CMP_reg_data16:
@@ -363,7 +450,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		break;
 	case C166_JB_bitaddr_rel:
 	case C166_JBC_bitaddr_rel:
-		op->type = RZ_ANALYSIS_OP_TYPE_RCJMP;
+		op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
 		op->cond = RZ_TYPE_COND_EQ;
 		op->jump = addr + op->size + (2 * ((st8)buf[2]));
 		op->fail = addr + op->size;
@@ -371,7 +458,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		break;
 	case C166_JNB_bitaddr_rel:
 	case C166_JNBS_bitaddr_rel:
-		op->type = RZ_ANALYSIS_OP_TYPE_RCJMP;
+		op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
 		op->cond = RZ_TYPE_COND_NE;
 		op->jump = addr + op->size + (2 * ((st8)buf[2]));
 		op->fail = addr + op->size;
