@@ -67,37 +67,55 @@ static void c166_set_jump_target_from_caddr(RzAnalysisOp *op, ut16 target) {
 }
 
 
-static RzAnalysisValue* c166_new_reg_value(ut8 reg) {
-	static RzRegItem r;
+static RzAnalysisValue* c166_new_reg_value(RzAnalysis *analysis, ut8 reg, bool byte) {
 	RzAnalysisValue *val = rz_analysis_value_new();
 	val->type = RZ_ANALYSIS_VAL_REG;
 	if (reg < 0xF0) {
 		//op->mmio_address = 0xFE00 + (2 * reg);
 		val->base = 0xFE00 + (2 * reg);
 	} else {
-		r.name = c166_rw[reg & 0xF];
-		val->reg = &r;
+		if (byte) {
+			val->reg = rz_reg_get(analysis->reg, c166_rb[reg & 0xF], RZ_REG_TYPE_GPR);
+		} else {
+			val->reg = rz_reg_get(analysis->reg, c166_rw[reg & 0xF], RZ_REG_TYPE_GPR);
+
+		}
 	}
 	return val;
 }
 
-static RzAnalysisValue* c166_new_mem_value(ut16 mem) {
-	static RzRegItem r;
-	ZERO_FILL(r);
+static RzAnalysisValue* c166_new_gpr_value(RzAnalysis *analysis, ut8 i, bool byte) {
+	RzAnalysisValue *val = rz_analysis_value_new();
+	val->type = RZ_ANALYSIS_VAL_REG;
+	if (byte) {
+		val->reg = rz_reg_get(analysis->reg, c166_rb[i & 0xF], RZ_REG_TYPE_GPR);
+	} else {
+		val->reg = rz_reg_get(analysis->reg, c166_rw[i & 0xF], RZ_REG_TYPE_GPR);
+	}
+	return val;
+}
+
+static RzAnalysisValue* c166_new_mem_value(RzAnalysis *analysis, ut16 mem) {
+	//static RzRegItem r;
+	//ZERO_FILL(r);
 	RzAnalysisValue *val = rz_analysis_value_new();
 	val->type = RZ_ANALYSIS_VAL_MEM;
 	if (mem < 0x4000) {
-		r.name = "DDP0";
-		val->reg = &r;
+		//r.name = "DDP0";
+		//val->reg = &r;
+		val->reg = rz_reg_get(analysis->reg, "DPP0", RZ_REG_TYPE_GPR);
 	} else if (mem < 0x8000) {
-		r.name = "DDP1";
-		val->reg = &r;
+		//r.name = "DDP1";
+		//val->reg = &r;
+		val->reg = rz_reg_get(analysis->reg, "DPP1", RZ_REG_TYPE_GPR);
 	} else if (mem < 0xC000) {
-		r.name = "DDP2";
-		val->reg = &r;
+		//r.name = "DDP2";
+		//val->reg = &r;
+		val->reg = rz_reg_get(analysis->reg, "DPP2", RZ_REG_TYPE_GPR);
 	} else {
-		r.name = "DDP3";
-		val->reg = &r;
+		//r.name = "DDP3";
+		//val->reg = &r;
+		val->reg = rz_reg_get(analysis->reg, "DPP3", RZ_REG_TYPE_GPR);
 	}
 	val->delta = mem & 0x3FFF;
 	return val;
@@ -111,6 +129,32 @@ static RzAnalysisValue* c166_new_imm_value(ut16 data, bool absolute) {
 	return val;
 }
 
+static inline void c166_op_rn_rm(RzAnalysis *analysis, RzAnalysisOp *op, ut8 nm, ut32 type, bool byte) {
+	op->dst = c166_new_gpr_value(analysis, (nm >> 4) & 0xf, byte);
+	//op->src[0] = op->dst;
+	op->src[0] = c166_new_gpr_value(analysis, nm & 0xf, byte);
+	op->type = type;
+}
+
+static inline void c166_op_rn_x(RzAnalysis *analysis, RzAnalysisOp *op, ut8 nx, ut32 type, bool byte) {
+	op->dst = c166_new_gpr_value(analysis, (nx >> 4) & 0xf, byte);
+	//op->src[0] = op->dst;
+	switch ((nx >> 2) & 0b11) {
+		case 0b11:
+			op->src[0] = c166_new_gpr_value(analysis, nx & 0b11, false);
+			op->src[0]->memref = byte ? 1: 2;
+			//op->type2 = RZ_ANALYSIS_OP_TYPE_ADD;
+			break;
+		case 0b10:
+			op->src[0] = c166_new_gpr_value(analysis, nx & 0b11, false);
+			op->src[0]->memref = byte ? 1: 2;
+			break;
+		default:
+			op->src[0] = c166_new_imm_value(nx & 0b111, true);
+			break;
+	}
+	op->type = type;
+}
 
 static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *buf, int len, RzAnalysisOpMask mask) {
 	struct c166_cmd cmd;
@@ -133,13 +177,19 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	switch (buf[0]) {
 	case C166_ADD_Rwn_Rwm:
 	case C166_ADDC_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_ADD, false);
+		break;
 	case C166_ADDB_Rbn_Rbm:
 	case C166_ADDCB_Rbn_Rbm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_ADD, true);
+		break;
 	case C166_ADD_Rwn_x:
 	case C166_ADDC_Rwn_x:
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_ADD, false);
+		break;
 	case C166_ADDB_Rbn_x:
 	case C166_ADDCB_Rbn_x:
-		op->type = RZ_ANALYSIS_OP_TYPE_ADD;
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_ADD, true);
 		break;
 	case C166_ADD_mem_reg:
 	case C166_ADD_reg_mem:
@@ -172,14 +222,20 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		break;
 
 	case C166_SUB_Rwn_Rwm:
-	case C166_SUB_Rwn_x:
-	case C166_SUBB_Rbn_Rbm:
-	case C166_SUBB_Rbn_x:
 	case C166_SUBC_Rwn_Rwm:
-	case C166_SUBC_Rwn_x:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_SUB, false);
+		break;
+	case C166_SUBB_Rbn_Rbm:
 	case C166_SUBCB_Rbn_Rbm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_SUB, true);
+		break;
+	case C166_SUB_Rwn_x:
+	case C166_SUBC_Rwn_x:
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_SUB, false);
+		break;
+	case C166_SUBB_Rbn_x:
 	case C166_SUBCB_Rbn_x:
-		op->type = RZ_ANALYSIS_OP_TYPE_SUB;
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_SUB, true);
 		break;
 	case C166_SUB_mem_reg:
 	case C166_SUB_reg_data16:
@@ -198,7 +254,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		break;
 	case C166_MUL_Rwn_Rwm:
 	case C166_MULU_Rwn_Rwm:
-		op->type = RZ_ANALYSIS_OP_TYPE_MUL;
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_MUL, false);
 		break;
 	case C166_DIV_Rwn:
 	case C166_DIVL_Rwn:
@@ -207,10 +263,16 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		op->type = RZ_ANALYSIS_OP_TYPE_DIV;
 		break;
 	case C166_AND_Rwn_Rwm:
-	case C166_AND_Rwn_x:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_AND, false);
+		break;
 	case C166_ANDB_Rbn_Rbm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_AND, true);
+		break;
+	case C166_AND_Rwn_x:
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_AND, false);
+		break;
 	case C166_ANDB_Rbn_x:
-		op->type = RZ_ANALYSIS_OP_TYPE_AND;
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_AND, true);
 		break;
 	case C166_AND_mem_reg:
 	case C166_AND_reg_data16:
@@ -222,10 +284,16 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
 	case C166_OR_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_OR, false);
+		break;
 	case C166_OR_Rwn_x:
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_OR, false);
+		break;
 	case C166_ORB_Rbn_Rbm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_OR, true);
+		break;
 	case C166_ORB_Rbn_x:
-		op->type = RZ_ANALYSIS_OP_TYPE_OR;
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_OR, true);
 		break;
 	case C166_OR_mem_reg:
 	case C166_OR_reg_data16:
@@ -237,10 +305,16 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
 	case C166_XOR_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_XOR, false);
+		break;
 	case C166_XOR_Rwn_x:
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_XOR, false);
+		break;
 	case C166_XORB_Rbn_Rbm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_XOR, true);
+		break;
 	case C166_XORB_Rbn_x:
-		op->type = RZ_ANALYSIS_OP_TYPE_XOR;
+		c166_op_rn_x(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_XOR, true);
 		break;
 	case C166_XOR_mem_reg:
 	case C166_XOR_reg_data16:
@@ -308,31 +382,41 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		op->type = RZ_ANALYSIS_OP_TYPE_POP;
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
-	case C166_PUSH_reg: {
+	case C166_PUSH_reg:
 		op->type = RZ_ANALYSIS_OP_TYPE_PUSH;
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
-	}
-	case C166_SHL_Rwn_data4:
 	case C166_SHL_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_SHL, false);
+		break;
+	case C166_SHL_Rwn_data4:
 		op->type = RZ_ANALYSIS_OP_TYPE_SHL;
 		break;
-	case C166_SHR_Rwn_data4:
-	case C166_SHR_Rwn_Rwm:
-	case C166_ASHR_Rwn_data4:
+
 	case C166_ASHR_Rwn_Rwm:
+	case C166_SHR_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_SHR, false);
+		break;
+	case C166_SHR_Rwn_data4:
+	case C166_ASHR_Rwn_data4:
 		op->type = RZ_ANALYSIS_OP_TYPE_SHR;
 		break;
-	case C166_ROL_Rwn_data4:
 	case C166_ROL_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_ROL, false);
+		break;
+	case C166_ROL_Rwn_data4:
 		op->type = RZ_ANALYSIS_OP_TYPE_ROL;
 		break;
-	case C166_ROR_Rwn_data4:
 	case C166_ROR_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_ROR, false);
+		break;
+	case C166_ROR_Rwn_data4:
 		op->type = RZ_ANALYSIS_OP_TYPE_ROR;
 		break;
 
 	case C166_MOV_Rwn_Rwm:
+		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_MOV, false);
+		break;
 	case C166_MOV_Rwn_data4:
 	case C166_MOV_Rwn_oRwm:
 	case C166_MOV_Rwn_oRwmp:
@@ -360,13 +444,13 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		break;
 	case C166_MOV_reg_data16:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->dst = c166_new_reg_value(buf[1]);
+		op->dst = c166_new_reg_value(analysis, buf[1], false);
 		op->src[0] = c166_new_imm_value(rz_read_at_le16(buf, 2), true);
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
 	case C166_MOVB_reg_data8:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->dst = c166_new_reg_value(buf[1]);
+		op->dst = c166_new_reg_value(analysis, buf[1], true);
 		op->src[0] = c166_new_imm_value(rz_read_at_le16(buf, 2) & 0xFF, true);
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
@@ -375,8 +459,8 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_MOVBS_reg_mem:
 	case C166_MOVBZ_reg_mem:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->dst = c166_new_reg_value(buf[1]);
-		op->src[0] = c166_new_mem_value(rz_read_at_le16(buf, 2));
+		op->dst = c166_new_reg_value(analysis, buf[1], buf[0] != C166_MOV_reg_mem);
+		op->src[0] = c166_new_mem_value(analysis, rz_read_at_le16(buf, 2));
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
 	case C166_MOV_mem_reg:
@@ -384,8 +468,8 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_MOVBS_mem_reg:
 	case C166_MOVBZ_mem_reg:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->src[0] = c166_new_reg_value(buf[1]);
-		op->dst = c166_new_mem_value(rz_read_at_le16(buf, 2));
+		op->src[0] = c166_new_reg_value(analysis, buf[1], buf[0] != C166_MOV_mem_reg);
+		op->dst = c166_new_mem_value(analysis, rz_read_at_le16(buf, 2));
 		c166_set_mimo_addr_from_reg(op, buf[1]);
 		break;
 	case C166_MOV_mem_oRwn:
@@ -530,6 +614,83 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	return op->size;
 }
 
+static char *get_reg_profile(RzAnalysis *analysis) {
+	const char *p =
+			"=PC	pc\n"
+			"=SP	sp\n"
+			"=A0	r0\n"
+			"=A1	r1\n"
+			// "gpr	r0	.16	0	0\n"
+			// "gpr	r1	.16	2	0\n"
+			// "gpr	r2	.16	4	0\n"
+			// "gpr	r3	.16	6	0\n"
+			// "gpr	r4	.16	8	0\n"
+			// "gpr	r5	.16	10	0\n"
+			// "gpr	r6	.16	12	0\n"
+			// "gpr	r7	.16	14	0\n"
+			// "gpr	r8	.16	16	0\n"
+			// "gpr	r9	.16	18	0\n"
+			// "gpr	r10	.16	20	0\n"
+			// "gpr	r11	.16	22	0\n"
+			// "gpr	r12	.16	24	0\n"
+			// "gpr	r13	.16	26	0\n"
+			// "gpr	r14	.16	28	0\n"
+			// "gpr	r15	.16	30	0\n"
+
+			"gpr	r0	.16	64512	0\n"
+			"gpr	r1	.16	64514	0\n"
+			"gpr	r2	.16	64516	0\n"
+			"gpr	r3	.16	64518	0\n"
+			"gpr	r4	.16	64520	0\n"
+			"gpr	r5	.16	64522	0\n"
+			"gpr	r6	.16	64524	0\n"
+			"gpr	r7	.16	64526	0\n"
+			"gpr	r8	.16	64528	0\n"
+			"gpr	r9	.16	64530	0\n"
+			"gpr	r10	.16	64532	0\n"
+			"gpr	r11	.16	64534	0\n"
+			"gpr	r12	.16	64536	0\n"
+			"gpr	r13	.16	64538	0\n"
+			"gpr	r14	.16	64540	0\n"
+			"gpr	r15	.16	64542	0\n"
+
+			// Sub regs
+			"gpr	rl0	.8	64512	0\n"
+			"gpr	rh0	.8	64513	0\n"
+			"gpr	rl1	.8	64514	0\n"
+			"gpr	rh1	.8	64515	0\n"
+			"gpr	rl2	.8	64516	0\n"
+			"gpr	rh2	.8	64517	0\n"
+			"gpr	rl3	.8	64518	0\n"
+			"gpr	rh3	.8	64519	0\n"
+			"gpr	rl4	.8	64520	0\n"
+			"gpr	rh4	.8	64521	0\n"
+			"gpr	rl5	.8	64522	0\n"
+			"gpr	rh5	.8	64523	0\n"
+			"gpr	rl6	.8	64524	0\n"
+			"gpr	rh6	.8	64525	0\n"
+			"gpr	rl7	.8	64526	0\n"
+			"gpr	rh7	.8	64527	0\n"
+
+			"gpr	DPP0	.16	65024	0\n"
+			"gpr	DPP1	.16	65026	0\n"
+			"gpr	DPP2	.16	65028	0\n"
+			"gpr	DPP3	.16	65030	0\n"
+			"gpr	CSP	    .16	65032	0\n"
+
+			"gpr	MDH	    .16	65036	0\n"
+			"gpr	MDL	    .16	65038	0\n"
+			"gpr	CP	    .16	65040	0\n"
+			"gpr	SP	    .16	65042	0\n"
+			"gpr	STKOV	.16	65044	0\n"
+			"gpr	STKUN	.16	65046	0\n"
+			"gpr	PSW		.16	65296	0\n"
+			"gpr	ONES	.16	65308	0\n"
+			"gpr	ZEROS	.16	65310	0\n"
+			;
+	return strdup(p);
+}
+
 RzAnalysisPlugin rz_analysis_plugin_c166 = {
 	.name = "c166",
 	.desc = "Bosch/Siemens C166 analysis plugin",
@@ -538,6 +699,7 @@ RzAnalysisPlugin rz_analysis_plugin_c166 = {
 	.bits = 16,
 	.esil = false,
 	.op = &c166_op,
+	.get_reg_profile = &get_reg_profile
 };
 
 #ifndef RZ_PLUGIN_INCORE
