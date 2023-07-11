@@ -343,3 +343,19 @@ d "mov [-r0], r14" 88E0
 
 # from Inline asm
 d "exts r3, #0x01" DC03
+
+# from Directives/Reference/STATIC
+d "add r0, #0xffec" 06F0ECFF
+d "shl r4, #0x01" 5C14
+
+# from __bfld__ ref
+d "bfldh 0xff00, #0xff, #0x01" 1A8001FF
+d "bfldl 0xff00, #0xff, #0x01" 0A80FF01
+
+# from __sof__ ref
+d "mov 0xfde2, r4" F6F4E2FD
+d "mov r4, #0xfea0" E6F4A0FE
+
+# from using interupts
+d "bfldh 0xff10, #0xf0, #0xf0" 1A88F0F0
+d "mov 0x0000, 0xff1c" F68E0000
