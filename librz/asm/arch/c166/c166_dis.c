@@ -1016,8 +1016,14 @@ int c166_decode_command(const ut8 *instr, struct c166_cmd *cmd, int len) {
 		case C166_MOVB_oRwn_oRwmp:
 			return c166_instr_mov_nm(cmd, "movb", "[%s], [%s+]", instr[1], c166_rw, c166_rw, false);
 
-		case C166_ATOMIC_or_EXTR_irang2:
-			return c166_instr_irang2(cmd, "atomic", instr[1]);
+		case C166_ATOMIC_or_EXTR_irang2: {
+			const ut8 sub_op  = (instr[1] >> 6) & 0b11;
+			if (sub_op == 0b00)
+				return c166_instr_irang2(cmd, "atomic", instr[1]);
+			else if (sub_op == 0b10)
+				return c166_instr_irang2(cmd, "extr", instr[1]);
+			break;
+		}
 		case C166_EXTP_or_EXTS_Rwm_irang2:
 			return c166_instr_rw_irang2(cmd, c166_extx_names[(instr[1] >> 6) & 0b11], instr[1]);
 

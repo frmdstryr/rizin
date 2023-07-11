@@ -138,6 +138,7 @@ d "divu r7" 5B70
 d "einit" B54AB5B5
 d "exts r2, #0x01" DC02
 d "extp r5, #0x02" DC55
+d "extr #0x01" D190
 
 d "extsr #0xab, #0x02" D790AB00
 d "extpr #0x01ab, #0x01" D7C0AB01
