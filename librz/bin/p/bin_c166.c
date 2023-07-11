@@ -28,6 +28,50 @@ static void destroy(RzBinFile *bf) {
 	bf->o->bin_obj = NULL;
 }
 
+static RzList /*<RzBinSection *>*/ *sections(RzBinFile *bf) {
+	RzList *ret = NULL;
+	RzBinSection *ptr = NULL;
+	RzBuffer *obj = bf->o->bin_obj;
+
+	if (!(ret = rz_list_newf((RzListFree)rz_bin_section_free))) {
+		return NULL;
+	}
+
+	if (!(ptr = RZ_NEW0(RzBinSection))) {
+		return ret;
+	}
+
+	ptr->name = strdup("vectors");
+	ptr->size = 0x1FF;
+	ptr->vsize = ptr->size;
+	ptr->paddr = 0;
+	ptr->vaddr = 0;
+	ptr->perm = RZ_PERM_R; // r--
+	rz_list_append(ret, ptr);
+
+	ut64 offset = 0;
+	ut8 segment = 0;
+	if (bf->size > 0) {
+		while (offset < bf->size && segment < 255) {
+			if (!(ptr = RZ_NEW0(RzBinSection))) {
+				return ret;
+			}
+
+			ptr->name = rz_str_newf("seg_%d", segment);
+			ptr->size = 0x10000;
+			ptr->vsize = ptr->size;
+			ptr->paddr = offset;
+			ptr->vaddr = offset;
+			ptr->perm = RZ_PERM_RWX ;
+			rz_list_append(ret, ptr);
+			segment += 1;
+			offset += 0x10000;
+		}
+	}
+
+	return ret;
+}
+
 static RzBinInfo *info(RzBinFile *arch) {
 	RzBinInfo *ret = RZ_NEW0(RzBinInfo);
 	if (!ret)
@@ -42,7 +86,7 @@ static RzBinInfo *info(RzBinFile *arch) {
 	ret->machine = strdup("Bosch/Siemens C166");
 	ret->os = strdup("c166");
 	ret->arch = strdup("c166");
-	ret->bits = 8;
+	ret->bits = 16;
 
 	return ret;
 }
@@ -57,7 +101,7 @@ struct rz_bin_plugin_t rz_bin_plugin_c166 = {
 	.check_buffer = &check_buffer,
 	.baddr = NULL,
 	.entries = NULL,
-	.sections = NULL,
+	.sections = &sections,
 	.info = &info,
 };
 
