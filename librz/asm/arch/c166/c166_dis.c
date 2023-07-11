@@ -378,7 +378,7 @@ static const char *c166_reg(char *buf, ut8 reg, bool byte, bool esfr) {
 static const char *c166_bitoff(char *buf, ut8 bitoff, bool esfr) {
 	if (bitoff >= 0xF0) {
 		// GPR
-		snprintf(buf, 11, "r%i", bitoff & 0xF);
+		return c166_rw[bitoff & 0xF];
 	} else if (bitoff >= 0x80) {
 		if (esfr) {
 			const ut16 addr = 0xF100 + (2 * (bitoff & 0x7F));
