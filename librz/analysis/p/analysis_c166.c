@@ -424,6 +424,19 @@ static void c166_op_call_seg_caddr(RzAnalysisOp *op, const ut8 *buf) {
 	);
 }
 
+static void c166_op_call_rel(RzAnalysisOp *op, const ut8 *buf) {
+	op->type = RZ_ANALYSIS_OP_TYPE_CALL;
+	op->jump = op->addr + op->size + (2 * ((st8)buf[1]));
+	rz_strbuf_setf(
+		&op->esil,
+		"2,SP,-="
+		",IP,SP,[],="
+		",0x%"PFMT64x",PC,=",
+		op->jump
+	);
+
+}
+
 static void c166_op_mov_reg_data(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
 	const ut8 reg = buf[1];
 	const bool byte = buf[0] == C166_MOVB_reg_data8;
@@ -950,8 +963,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		op->fail = addr + op->size;
 		break;
 	case C166_CALLR_rel:
-		op->type = RZ_ANALYSIS_OP_TYPE_CALL;
-		op->jump = addr + op->size + (2 * ((st8)buf[1]));
+		c166_op_call_rel(op, buf);
 		break;
 	case C166_CALLS_seg_caddr:
 		c166_op_call_seg_caddr(op, buf);
@@ -973,13 +985,12 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 
 static char *get_reg_profile(RzAnalysis *analysis) {
 	const char *p =
-			"=PC	PC\n"
+			"=PC	IP\n"
 			"=SP	SP\n"
 			"=A0	r0\n"
 			"=A1	r1\n"
 
-			"gpr	PC	.32	0	0\n"
-			"gpr	IP	.16	4	0\n"
+			"gpr	IP	.32	0	0\n"
 
 			"gpr	r0	.16	64512	0\n"
 			"gpr	r1	.16	64514	0\n"
@@ -1036,11 +1047,11 @@ static char *get_reg_profile(RzAnalysis *analysis) {
 static int archinfo(RzAnalysis *a, RzAnalysisInfoType query) {
 	switch (query) {
 	case RZ_ANALYSIS_ARCHINFO_MIN_OP_SIZE:
-		return 0;
+		return -1;
 	case RZ_ANALYSIS_ARCHINFO_MAX_OP_SIZE:
 		return 4;
 	case RZ_ANALYSIS_ARCHINFO_TEXT_ALIGN:
-		return 2;
+		return -1;
 	case RZ_ANALYSIS_ARCHINFO_DATA_ALIGN:
 		return -1;
 	case RZ_ANALYSIS_ARCHINFO_CAN_USE_POINTERS:
@@ -1079,7 +1090,7 @@ RzAnalysisPlugin rz_analysis_plugin_c166 = {
 	.bits = 16,
 	.esil = true,
 	.op = &c166_op,
-	//.archinfo = &archinfo,
+	.archinfo = &archinfo,
 	.get_reg_profile = &get_reg_profile,
 	.init = &init,
 	.fini = &fini,
