@@ -399,7 +399,7 @@ static const char *c166_bitoff(char *buf, ut8 bitoff, bool esfr) {
 // Caller must provide a buf with at least 13 characters.
 static const char *c166_mem(char *buf, ut16 mem) {
 	const int i = (mem >> 14) & 0b11;
-	snprintf(buf, 12, "dpp%i:0x%04x", i, mem & 0x3FFF);
+	snprintf(buf, 12, "DPP%i:0x%04x", i, mem & 0x3FFF);
 	return buf;
 }
 
