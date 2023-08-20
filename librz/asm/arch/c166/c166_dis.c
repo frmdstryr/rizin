@@ -382,16 +382,24 @@ static const char *c166_bitoff(char *buf, ut8 bitoff, bool esfr) {
 	} else if (bitoff >= 0x80) {
 		if (esfr) {
 			const ut16 addr = 0xF100 + (2 * (bitoff & 0x7F));
-			snprintf(buf, 11, "0x%04x", addr);
+			snprintf(buf, 7, "0x%04x", addr);
 		} else {
 			const ut16 addr = 0xFF00 + (2 * (bitoff & 0x7F));
-			snprintf(buf, 11, "0x%04x", addr);
+			snprintf(buf, 7, "0x%04x", addr);
 		}
 	} else {
 		// Ram
 		const ut16 addr = 0xFD00 + (2 * bitoff);
-		snprintf(buf, 11, "0x%04x", addr);
+		snprintf(buf, 7, "0x%04x", addr);
 	}
+	return buf;
+}
+
+// Format a mem value into buf. Does not apply to seg or pag formats.
+// Caller must provide a buf with at least 13 characters.
+static const char *c166_mem(char *buf, ut16 mem) {
+	const int i = (mem >> 14) & 0b11;
+	snprintf(buf, 12, "dpp%i:0x%04x", i, mem & 0x3FFF);
 	return buf;
 }
 
@@ -442,8 +450,9 @@ static int c166_instr_rw_data16(struct c166_cmd *cmd, const char *instr, ut8 reg
 }
 
 static int c166_instr_rw_mem(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 data) {
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "r%i, 0x%04x", reg & 0xF, data);
+	snprintf(cmd->operands, C166_MAX_OPT, "r%i, %s", reg & 0xF, c166_mem(tmp, data));
 	return 4;
 }
 
@@ -522,35 +531,37 @@ static int c166_instr_seg_or_pag_irang2(struct c166_cmd *cmd, const char *instr,
 }
 
 static int c166_instr_reg_mem(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 mem, bool byte) {
-	char tmp[12];
+	char tmp[16];
+	char tmp2[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "%s, 0x%04x", c166_reg(tmp, reg, byte, cmd->esfr), mem);
+	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_reg(tmp, reg, byte, cmd->esfr), c166_mem(tmp2, mem));
 	return 4;
 }
 
 static int c166_instr_mem_reg(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 mem, bool byte) {
-	char tmp[12];
+	char tmp[16];
+	char tmp2[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "0x%04x, %s", mem, c166_reg(tmp, reg, byte, cmd->esfr));
+	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_mem(tmp2, mem), c166_reg(tmp, reg, byte, cmd->esfr));
 	return 4;
 }
 
 static int c166_instr_reg(struct c166_cmd *cmd, const char *instr, ut8 reg, bool byte) {
-	char tmp[12];
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s", c166_reg(tmp, reg, byte, cmd->esfr));
 	return 2;
 }
 
 static int c166_instr_reg_data16(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 data, bool byte) {
-	char tmp[12];
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, #0x%04x", c166_reg(tmp, reg, byte, cmd->esfr), data);
 	return 4;
 }
 
 static int c166_instr_reg_data8(struct c166_cmd *cmd, const char *instr, ut8 reg, ut8 data, bool byte) {
-	char tmp[12];
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	// 8-bit immediate constant
 	// (represented by #data8, where byte xx is not significant)
@@ -566,14 +577,14 @@ static int c166_instr_seg_caddr(struct c166_cmd *cmd, const char *instr, ut8 seg
 }
 
 static int c166_instr_reg_caddr(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 caddr) {
-	char tmp[12];
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, 0x%04x", c166_reg(tmp, reg, false, cmd->esfr), caddr);
 	return 4;
 }
 
 static int c166_instr_bitoff(struct c166_cmd *cmd, const char *instr, ut8 q, ut8 bitoff) {
-	char tmp[12];
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 bit = (q >> 4) & 0xF;
 	snprintf(cmd->operands, C166_MAX_OPT, "%s.%i", c166_bitoff(tmp, bitoff, cmd->esfr), bit);
@@ -592,7 +603,7 @@ static int c166_instr_bitaddr_bitaddr(struct c166_cmd *cmd, const char *instr, u
 }
 
 static int c166_instr_bitaddr_rel(struct c166_cmd *cmd, const char *instr, ut8 qq, ut8 rr, ut8 q0) {
-	char tmp[12];
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 q = (q0 >> 4) & 0xF;
 	snprintf(cmd->operands, C166_MAX_OPT, "%s.%i, %i", c166_bitoff(tmp, qq, cmd->esfr), q, (st8)rr);
@@ -627,7 +638,7 @@ static int c166_instr_cc_caddr(struct c166_cmd *cmd, const char *instr, ut8 op, 
 }
 
 static int c166_instr_bfld(struct c166_cmd *cmd, const char *instr, ut8 bitoff, ut8 opt1, ut8 opt2, bool high) {
-	char tmp[12];
+	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	if (high) {
 		snprintf(cmd->operands, C166_MAX_OPT,
@@ -661,10 +672,11 @@ static int c166_instr_mov_nm(
 static int c166_instr_mov_mem_oRw(struct c166_cmd *cmd, const char *instr, ut8 op, ut16 mem, bool swap) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 n = op & 0xF;
+	char tmp[16];
 	if (swap) {
-		snprintf(cmd->operands, C166_MAX_OPT, "[%s], 0x%04x", c166_rw[n], mem);
+		snprintf(cmd->operands, C166_MAX_OPT, "[%s], %s", c166_rw[n], c166_mem(tmp, mem));
 	} else {
-		snprintf(cmd->operands, C166_MAX_OPT, "0x%04x, [%s]", mem, c166_rw[n]);
+		snprintf(cmd->operands, C166_MAX_OPT, "%s, [%s]", c166_mem(tmp, mem), c166_rw[n]);
 	}
 	return 4;
 }

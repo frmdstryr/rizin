@@ -4,48 +4,48 @@ d "add r1, #0x00" 0810
 d "add r3, [r2]" 083A
 d "add r2, [r0+]" 082C
 d "add r2, #0xfe00" 06F200FE
-d "add r1, 0x2301" 02F10123
-d "add 0x2301, r1" 04F10123
+d "add r1, dpp0:0x2301" 02F10123
+d "add dpp0:0x2301, r1" 04F10123
 
 d "addb rh1, rh0" 0131
 d "addb rl1, #0x01" 0921
 d "addb rh1, [rh0]" 0939
 d "addb rl0, [rh1+]" 090F
 d "addb 0xfe00, #0x11" 07001122
-d "addb 0xfe00, 0x2211" 03001122
-d "addb 0x2211, 0xfe00" 05001122
+d "addb 0xfe00, dpp0:0x2211" 03001122
+d "addb dpp0:0x2211, 0xfe00" 05001122
 
 d "addc r6, r2" 1062
 d "addc r1, #0x00" 1810
 d "addc r3, [r2]" 183A
 d "addc r2, [r0+]" 182C
 d "addc r2, #0xfe00" 16F200FE
-d "addc r1, 0x2301" 12F10123
-d "addc 0x2301, r1" 14F10123
+d "addc r1, dpp0:0x2301" 12F10123
+d "addc dpp0:0x2301, r1" 14F10123
 
 d "addcb rh1, rh0" 1131
 d "addcb rl1, #0x01" 1921
 d "addcb rh1, [rh0]" 1939
 d "addcb rl0, [rh1+]" 190F
 d "addcb 0xfe00, #0x11" 17001122
-d "addcb 0xfe00, 0x2211" 13001122
-d "addcb 0x2211, 0xfe00" 15001122
+d "addcb 0xfe00, dpp0:0x2211" 13001122
+d "addcb dpp0:0x2211, 0xfe00" 15001122
 
 d "and r6, r2" 6062
 d "and r1, #0x00" 6810
 d "and r3, [r2]" 683A
 d "and r2, [r0+]" 682C
 d "and r2, #0xfe00" 66F200FE
-d "and r1, 0x2301" 62F10123
-d "and 0x2301, r1" 64F10123
+d "and r1, dpp0:0x2301" 62F10123
+d "and dpp0:0x2301, r1" 64F10123
 
 d "andb rh1, rh0" 6131
 d "andb rl1, #0x01" 6921
 d "andb rh1, [rh0]" 6939
 d "andb rl0, [rh1+]" 690F
 d "andb 0xfe00, #0x11" 67001122
-d "andb 0xfe00, 0x2211" 63001122
-d "andb 0x2211, 0xfe00" 65001122
+d "andb 0xfe00, dpp0:0x2211" 63001122
+d "andb dpp0:0x2211, 0xfe00" 65001122
 
 d "ashr r7, r10" AC7A
 d "ashr r6, #0x01" BC16
@@ -105,25 +105,25 @@ d "cmp r1, #0x06" 4816
 d "cmp r0, [r2]" 480A
 d "cmp r9, [r0+]" 489C
 d "cmp r1, #0xabcd" 46F1CDAB
-d "cmp r1, 0xabcd" 42F1CDAB
+d "cmp r1, dpp2:0x2bcd" 42F1CDAB
 d "cmpb rl0, rh0" 4101
 d "cmpb rh0, [rl0]" 4918
 d "cmpb rl2, [rl1+]" 494E
 d "cmpb rh0, #0x02" 4912
 d "cmpb 0xfe02, #0xff" 4701FF00
-d "cmpb 0xfe02, 0x12ff" 4301FF12
+d "cmpb 0xfe02, dpp0:0x12ff" 4301FF12
 d "cmpd1 r2, #0x03" A032
 d "cmpd1 r1, #0x1234" A6F13412
-d "cmpd1 r3, 0xabcd" A2F3CDAB
+d "cmpd1 r3, dpp2:0x2bcd" A2F3CDAB
 d "cmpd2 r1, #0x0a" B0A1
 d "cmpd2 r7, #0x1234" B6F73412
-d "cmpd2 r0, 0xabcd" B2F0CDAB
+d "cmpd2 r0, dpp2:0x2bcd" B2F0CDAB
 d "cmpi1 r2, #0x03" 8032
 d "cmpi1 r1, #0x1234" 86F13412
-d "cmpi1 r3, 0xabcd" 82F3CDAB
+d "cmpi1 r3, dpp2:0x2bcd" 82F3CDAB
 d "cmpi2 r1, #0x0a" 90A1
 d "cmpi2 r7, #0x1234" 96F73412
-d "cmpi2 r0, 0xabcd" 92F0CDAB
+d "cmpi2 r0, dpp2:0x2bcd" 92F0CDAB
 
 d "cpl r4" 9140
 d "cplb rl1" B120
@@ -170,10 +170,11 @@ d "mov [r1+], [r2]" D812
 d "mov [r3], [r4+]" E834
 d "mov r0, [r1+#0x1122]" D4012211
 d "mov [r1+#0x1122], r0" C4012211
-d "mov [r2], 0x0660" 84026006
-d "mov 0x0660, [r2]" 94026006
-d "mov r0, 0x2211" F2F01122
-d "mov 0x2211, r0" F6F01122
+d "mov [r2], dpp0:0x0660" 84026006
+d "mov dpp0:0x0660, [r2]" 94026006
+d "mov r0, dpp0:0x2211" F2F01122
+d "mov dpp0:0x2211, r0" F6F01122
+d "mov dpp3:0x3eb0, r8" F6F8B0FE
 
 d "movb rh1, rh0" F131
 d "movb rh7, #0x03" E13F
@@ -187,18 +188,18 @@ d "movb [r0+], [r2]" D902
 d "movb [r0], [r2+]" E902
 d "movb rl0, [r1+#0x1122]" F4012211
 d "movb [r1+#0x1122], rl0" E4012211
-d "movb [r2], 0x0660" A4026006
-d "movb 0x0660, [r2]" B4026006
-d "movb rl0, 0x11ff" F3F0FF11
-d "movb 0x11ff, rl0" F7F0FF11
+d "movb [r2], dpp0:0x0660" A4026006
+d "movb dpp0:0x0660, [r2]" B4026006
+d "movb rl0, dpp0:0x11ff" F3F0FF11
+d "movb dpp0:0x11ff, rl0" F7F0FF11
 
 d "movbs r0, rh0" D010
-d "movbs 0xfe06, 0x2211" D2031122
-d "movbs 0x2211, 0xfe06" D5031122
+d "movbs 0xfe06, dpp0:0x2211" D2031122
+d "movbs dpp0:0x2211, 0xfe06" D5031122
 
 d "movbz r1, rl0" C001
-d "movbz 0xfe06, 0x2211" C2031122
-d "movbz 0x2211, 0xfe06" C5031122
+d "movbz 0xfe06, dpp0:0x2211" C2031122
+d "movbz dpp0:0x2211, 0xfe06" C5031122
 
 d "mul r1, r0" 0B10
 d "mulu r2, r3" 1B23
@@ -213,16 +214,16 @@ d "or r1, #0x01" 7811
 d "or r0, [r1]" 7809
 d "or r4, [r3+]" 784F
 d "or 0xfe00, #0x2211" 76001122
-d "or 0xfe00, 0x2211" 72001122
-d "or 0x2211, 0xfe00" 74001122
+d "or 0xfe00, dpp0:0x2211" 72001122
+d "or dpp0:0x2211, 0xfe00" 74001122
 
 d "orb rh1, rh0" 7131
 d "orb rl1, #0x01" 7921
 d "orb rh1, [rh0]" 7939
 d "orb rl0, [rh1+]" 790F
 d "orb 0xfe00, #0x11" 77001122
-d "orb 0xfe00, 0x2211" 73001122
-d "orb 0x2211, 0xfe00" 75001122
+d "orb 0xfe00, dpp0:0x2211" 73001122
+d "orb dpp0:0x2211, 0xfe00" 75001122
 
 d "pcall r1, 0x4801" E2F10148
 d "pop r0" FCF0
@@ -244,7 +245,7 @@ d "ror r3, r4" 2C34
 d "ror r3, #0x04" 3C43
 
 d "scxt r1, #0x4102" C6F10241
-d "scxt r3, 0x3412" D6F31234
+d "scxt r3, dpp0:0x3412" D6F31234
 d "shl r0, r1" 4C01
 d "shl r7, #0x01" 5C17
 d "shr r4, r5" 6C45
@@ -257,32 +258,32 @@ d "sub r0, r2" 2002
 d "sub r0, [r1]" 2809
 d "sub r4, [r3+]" 284F
 d "sub 0xfe00, #0x2211" 26001122
-d "sub 0xfe00, 0x2211" 22001122
-d "sub 0x2211, 0xfe00" 24001122
+d "sub 0xfe00, dpp0:0x2211" 22001122
+d "sub dpp0:0x2211, 0xfe00" 24001122
 
 d "subb rh1, rh0" 2131
 d "subb rl1, #0x01" 2921
 d "subb rh1, [rh0]" 2939
 d "subb rl0, [rh1+]" 290F
 d "subb 0xfe00, #0x11" 27001122
-d "subb 0xfe00, 0x2211" 23001122
-d "subb 0x2211, 0xfe00" 25001122
+d "subb 0xfe00, dpp0:0x2211" 23001122
+d "subb dpp0:0x2211, 0xfe00" 25001122
 
 d "subc r3, r0" 3030
 d "subc r2, #0x01" 3821
 d "subc r3, [r1]" 3839
 d "subc r0, [r3+]" 380F
 d "subc 0xfe00, #0x2211" 36001122
-d "subc 0xfe00, 0x2211" 32001122
-d "subc 0x2211, 0xfe00" 34001122
+d "subc 0xfe00, dpp0:0x2211" 32001122
+d "subc dpp0:0x2211, 0xfe00" 34001122
 
 d "subcb rh1, rh0" 3131
 d "subcb rl1, #0x01" 3921
 d "subcb rh1, [rh0]" 3939
 d "subcb rl0, [rh1+]" 390F
 d "subcb 0xfe00, #0x11" 37001122
-d "subcb 0xfe00, 0x2211" 33001122
-d "subcb 0x2211, 0xfe00" 35001122
+d "subcb 0xfe00, dpp0:0x2211" 33001122
+d "subcb dpp0:0x2211, 0xfe00" 35001122
 
 d "trap #0x0004" 9B01
 d "trap #0x0008" 9B02
@@ -292,16 +293,16 @@ d "xor r15, #0x02" 58F2
 d "xor r9, [r0]" 5898
 d "xor r1, [r0+]" 581C
 d "xor r1, #0x1000" 56F10010
-d "xor r3, 0x1000" 52F30010
-d "xor 0x1000, r2" 54F20010
+d "xor r3, dpp0:0x1000" 52F30010
+d "xor dpp0:0x1000, r2" 54F20010
 
 d "xorb rl0, rh0" 5101
 d "xorb rl0, #0x01" 5901
 d "xorb rh1, [rl0]" 5938
 d "xorb rl2, [rh1+]" 594F
 d "xorb rh7, #0x01" 57FF0100
-d "xorb rl7, 0x0201" 53FE0102
-d "xorb 0x0201, rl7" 55FE0102
+d "xorb rl7, dpp0:0x0201" 53FE0102
+d "xorb dpp0:0x0201, rl7" 55FE0102
 
 # The following are from keil's c166 user guide
 # PWS=0xff10, MDL=0xfe0e
@@ -309,17 +310,17 @@ d "xorb 0x0201, rl7" 55FE0102
 # from Directives/Reference/DISABLE
 d "bfldh 0xff10, #0xf0, #0xf0" 1A88F0F0
 d "mul r8, r9" 0B89
-d "mov r4, 0xfe0e" F2F40EFE
+d "mov r4, dpp3:0x3e0e" F2F40EFE
 d "bfldh 0xff10, #0xf0, #0x00" 1A8800F0
 d "ret" CB00
 
 # from Directives/Reference/without NOALIAS
-d "mov r4, 0x0000" F2F40000
-d "mov [r4], 0x0002" 84040200
+d "mov r4, dpp0:0x0000" F2F40000
+d "mov [r4], dpp0:0x0002" 84040200
 d "mov r5, #0x00" E005
 d "mov [r8], r5" B858
-d "mov r5, 0x0002" F2F50200
-d "mov r4, 0x0000" F2F40000
+d "mov r5, dpp0:0x0002" F2F50200
+d "mov r4, dpp0:0x0000" F2F40000
 d "mov [r4+#0x0002], r5" C4540200
 d "mov r8, #0x0002" E6F80200
 d "callr -16" BBF0
@@ -327,7 +328,7 @@ d "callr -16" BBF0
 # from Directives/Reference/NODDPPSAVE
 # DPP0=0xfe00 DPP3=0xfe06 CP=0xfe10
 d "scxt 0xfe06, #0x0003" C6030300
-d "mov 0x0000, r0" F6F00000
+d "mov dpp0:0x0000, r0" F6F00000
 d "scxt 0xfe10, #0xc000" C60800C0
 d "push 0xfe00" EC00
 
@@ -335,7 +336,7 @@ d "push 0xfe00" EC00
 d "add r0, #0xfff6" 06F0F6FF
 d "mov r4, r0" F040
 d "and r4, #0x3fff" 66F4FF3F
-d "mov r5, 0xfe04" F2F504FE
+d "mov r5, dpp3:0x3e04" F2F504FE
 d "addc r5, #0x0000" 16F50000
 
 # from Directives/Reference/SAVESYS
@@ -354,9 +355,9 @@ d "bfldh 0xff00, #0xff, #0x01" 1A8001FF
 d "bfldl 0xff00, #0xff, #0x01" 0A80FF01
 
 # from __sof__ ref
-d "mov 0xfde2, r4" F6F4E2FD
+d "mov dpp3:0x3de2, r4" F6F4E2FD
 d "mov r4, #0xfea0" E6F4A0FE
 
 # from using interupts
 d "bfldh 0xff10, #0xf0, #0xf0" 1A88F0F0
-d "mov 0x0000, 0xff1c" F68E0000
+d "mov dpp0:0x0000, 0xff1c" F68E0000
