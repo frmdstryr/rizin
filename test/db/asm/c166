@@ -361,3 +361,7 @@ d "mov r4, #0xfea0" E6F4A0FE
 # from using interupts
 d "bfldh 0xff10, #0xf0, #0xf0" 1A88F0F0
 d "mov DPP0:0x0000, 0xff1c" F68E0000
+
+
+# TODO: Multiline dis?
+# d "exts #0x04, #0x01\nmov 0x043de2, r4\nmov DPP3:0x3de2, r4" D7000400F6F4E2FDF6F4E2FD

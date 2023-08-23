@@ -6,7 +6,45 @@
 
 #include "c166_dis.h"
 
-static const char *c166_cc[] = {
+const char *c166_rw[] = {
+	"r0",
+	"r1",
+	"r2",
+	"r3",
+	"r4",
+	"r5",
+	"r6",
+	"r7",
+	"r8",
+	"r9",
+	"r10",
+	"r11",
+	"r12",
+	"r13",
+	"r14",
+	"r15",
+};
+
+const char *c166_rb[] = {
+	"rl0",
+	"rh0",
+	"rl1",
+	"rh1",
+	"rl2",
+	"rh2",
+	"rl3",
+	"rh3",
+	"rl4",
+	"rh4",
+	"rl5",
+	"rh5",
+	"rl6",
+	"rh6",
+	"rl7",
+	"rh7",
+};
+
+const char *c166_cc[] = {
 	"cc_UC", // 0
 	"cc_NET", // 1
 	"cc_Z/EQ", // 2
@@ -25,12 +63,310 @@ static const char *c166_cc[] = {
 	"cc_ULE", // F
 };
 
-static const char *c166_extx_names[] = {
+const char *c166_extx_names[] = {
 	"exts",
 	"extp",
 	"extsr",
 	"extpr"
 };
+
+const ut8 c166_opcode_sizes[] = {
+	2, // 0x0
+	2, // 0x1
+	4, // 0x2
+	4, // 0x3
+	4, // 0x4
+	4, // 0x5
+	4, // 0x6
+	4, // 0x7
+	2, // 0x8
+	2, // 0x9
+	4, // 0xa
+	2, // 0xb
+	2, // 0xc
+	2, // 0xd
+	2, // 0xe
+	2, // 0xf
+	2, // 0x10
+	2, // 0x11
+	4, // 0x12
+	4, // 0x13
+	4, // 0x14
+	4, // 0x15
+	4, // 0x16
+	4, // 0x17
+	2, // 0x18
+	2, // 0x19
+	4, // 0x1a
+	2, // 0x1b
+	2, // 0x1c
+	2, // 0x1d
+	2, // 0x1e
+	2, // 0x1f
+	2, // 0x20
+	2, // 0x21
+	4, // 0x22
+	4, // 0x23
+	4, // 0x24
+	4, // 0x25
+	4, // 0x26
+	4, // 0x27
+	2, // 0x28
+	2, // 0x29
+	4, // 0x2a
+	2, // 0x2b
+	2, // 0x2c
+	2, // 0x2d
+	2, // 0x2e
+	2, // 0x2f
+	2, // 0x30
+	2, // 0x31
+	4, // 0x32
+	4, // 0x33
+	4, // 0x34
+	4, // 0x35
+	4, // 0x36
+	4, // 0x37
+	2, // 0x38
+	2, // 0x39
+	4, // 0x3a
+	0, // 0x3b
+	2, // 0x3c
+	2, // 0x3d
+	2, // 0x3e
+	2, // 0x3f
+	2, // 0x40
+	2, // 0x41
+	4, // 0x42
+	4, // 0x43
+	0, // 0x44
+	0, // 0x45
+	4, // 0x46
+	4, // 0x47
+	2, // 0x48
+	2, // 0x49
+	4, // 0x4a
+	2, // 0x4b
+	2, // 0x4c
+	2, // 0x4d
+	2, // 0x4e
+	2, // 0x4f
+	2, // 0x50
+	2, // 0x51
+	4, // 0x52
+	4, // 0x53
+	4, // 0x54
+	4, // 0x55
+	4, // 0x56
+	4, // 0x57
+	2, // 0x58
+	2, // 0x59
+	4, // 0x5a
+	2, // 0x5b
+	2, // 0x5c
+	2, // 0x5d
+	2, // 0x5e
+	2, // 0x5f
+	2, // 0x60
+	2, // 0x61
+	4, // 0x62
+	4, // 0x63
+	4, // 0x64
+	4, // 0x65
+	4, // 0x66
+	4, // 0x67
+	2, // 0x68
+	2, // 0x69
+	4, // 0x6a
+	2, // 0x6b
+	2, // 0x6c
+	2, // 0x6d
+	2, // 0x6e
+	2, // 0x6f
+	2, // 0x70
+	2, // 0x71
+	4, // 0x72
+	4, // 0x73
+	4, // 0x74
+	4, // 0x75
+	4, // 0x76
+	4, // 0x77
+	2, // 0x78
+	2, // 0x79
+	4, // 0x7a
+	2, // 0x7b
+	2, // 0x7c
+	2, // 0x7d
+	2, // 0x7e
+	2, // 0x7f
+	2, // 0x80
+	2, // 0x81
+	4, // 0x82
+	0, // 0x83
+	4, // 0x84
+	0, // 0x85
+	4, // 0x86
+	4, // 0x87
+	2, // 0x88
+	2, // 0x89
+	4, // 0x8a
+	0, // 0x8b
+	0, // 0x8c
+	2, // 0x8d
+	2, // 0x8e
+	2, // 0x8f
+	2, // 0x90
+	2, // 0x91
+	4, // 0x92
+	0, // 0x93
+	4, // 0x94
+	0, // 0x95
+	4, // 0x96
+	4, // 0x97
+	2, // 0x98
+	2, // 0x99
+	4, // 0x9a
+	2, // 0x9b
+	2, // 0x9c
+	2, // 0x9d
+	2, // 0x9e
+	2, // 0x9f
+	2, // 0xa0
+	2, // 0xa1
+	4, // 0xa2
+	0, // 0xa3
+	4, // 0xa4
+	4, // 0xa5
+	4, // 0xa6
+	4, // 0xa7
+	2, // 0xa8
+	2, // 0xa9
+	4, // 0xaa
+	2, // 0xab
+	2, // 0xac
+	2, // 0xad
+	2, // 0xae
+	2, // 0xaf
+	2, // 0xb0
+	2, // 0xb1
+	4, // 0xb2
+	0, // 0xb3
+	4, // 0xb4
+	4, // 0xb5
+	4, // 0xb6
+	4, // 0xb7
+	2, // 0xb8
+	2, // 0xb9
+	4, // 0xba
+	2, // 0xbb
+	2, // 0xbc
+	2, // 0xbd
+	2, // 0xbe
+	2, // 0xbf
+	2, // 0xc0
+	0, // 0xc1
+	4, // 0xc2
+	0, // 0xc3
+	4, // 0xc4
+	4, // 0xc5
+	4, // 0xc6
+	0, // 0xc7
+	2, // 0xc8
+	2, // 0xc9
+	4, // 0xca
+	2, // 0xcb
+	2, // 0xcc
+	2, // 0xcd
+	2, // 0xce
+	2, // 0xcf
+	2, // 0xd0
+	2, // 0xd1
+	4, // 0xd2
+	0, // 0xd3
+	4, // 0xd4
+	4, // 0xd5
+	4, // 0xd6
+	4, // 0xd7
+	2, // 0xd8
+	2, // 0xd9
+	4, // 0xda
+	2, // 0xdb
+	2, // 0xdc
+	2, // 0xdd
+	2, // 0xde
+	2, // 0xdf
+	2, // 0xe0
+	2, // 0xe1
+	4, // 0xe2
+	0, // 0xe3
+	4, // 0xe4
+	0, // 0xe5
+	4, // 0xe6
+	4, // 0xe7
+	2, // 0xe8
+	2, // 0xe9
+	4, // 0xea
+	2, // 0xeb
+	2, // 0xec
+	2, // 0xed
+	2, // 0xee
+	2, // 0xef
+	2, // 0xf0
+	2, // 0xf1
+	4, // 0xf2
+	4, // 0xf3
+	4, // 0xf4
+	0, // 0xf5
+	4, // 0xf6
+	4, // 0xf7
+	0, // 0xf8
+	0, // 0xf9
+	4, // 0xfa
+	2, // 0xfb
+	2, // 0xfc
+	2, // 0xfd
+	2, // 0xfe
+	2, // 0xff
+};
+
+RZ_API c166_state* c166_get_state()
+{
+	static c166_state* state = NULL;
+	if (state) {
+		return state;
+	}
+
+	state = calloc(1, sizeof(c166_state));
+	if (!state) {
+		RZ_LOG_FATAL("Could not allocate memory for c166_state!");
+	}
+	state->esfr = false;
+	state->ext_mode = C166_EXT_MODE_NONE;
+	state->ext_value = 0;
+	state->i = 0;
+	return state;
+}
+
+RZ_API void c166_activate_ext(RZ_NONNULL c166_state* state, bool esfr, c166_ext_mode mode, ut8 count, ut16 value)
+{
+	rz_return_if_fail(state->i == 0);
+	rz_return_if_fail(count <= 3);
+	state->esfr = esfr;
+	state->ext_mode = mode;
+	state->i = count;
+	state->ext_value = value;
+}
+
+RZ_API void c166_maybe_deactivate_ext(RZ_NONNULL c166_state* state)
+{
+	if (state->i > 0) {
+		state->i -= 1;
+	} else if (state->i == 0) {
+		state->esfr = false;
+		state->ext_mode = C166_EXT_MODE_NONE;
+		state->ext_value = 0;
+	}
+}
 
 static const char *c166_instr_name(ut8 instr) {
 	switch (instr) {
@@ -356,14 +692,14 @@ static const char *c166_instr_name(ut8 instr) {
 
 // Return the reg interpretation in word or byte mode.
 // Caller must provide a buf with at least 10 characters.
-static const char *c166_reg(char *buf, ut8 reg, bool byte, bool esfr) {
+static const char *c166_reg(const c166_state* state, char *buf, ut8 reg, bool byte) {
 	if (reg >= 0xF0) {
 		// Short ‘reg’ addresses from F0 to FF always specify GPRs.
 		if (byte)
 			return c166_rb[reg & 0xF];
 		else
 			return c166_rw[reg & 0xF];
-	} else if (esfr) {
+	} else if (state->esfr) {
 		const ut16 addr = 0xF000 | (2 * reg);
 		snprintf(buf, 9, "0x%04x", addr);
 	} else {
@@ -375,12 +711,12 @@ static const char *c166_reg(char *buf, ut8 reg, bool byte, bool esfr) {
 
 // Format a bitoff value into buf.
 // Caller must provide a buf with at least 12 characters.
-static const char *c166_bitoff(char *buf, ut8 bitoff, bool esfr) {
+static const char *c166_bitoff(const c166_state* state, char *buf, ut8 bitoff) {
 	if (bitoff >= 0xF0) {
 		// GPR
 		return c166_rw[bitoff & 0xF];
 	} else if (bitoff >= 0x80) {
-		if (esfr) {
+		if (state->esfr) {
 			const ut16 addr = 0xF100 + (2 * (bitoff & 0x7F));
 			snprintf(buf, 7, "0x%04x", addr);
 		} else {
@@ -397,25 +733,40 @@ static const char *c166_bitoff(char *buf, ut8 bitoff, bool esfr) {
 
 // Format a mem value into buf. Does not apply to seg or pag formats.
 // Caller must provide a buf with at least 13 characters.
-static const char *c166_mem(char *buf, ut16 mem) {
+static const char *c166_mem(const c166_state* state, char *buf, ut16 mem) {
 	const int i = (mem >> 14) & 0b11;
-	snprintf(buf, 12, "DPP%i:0x%04x", i, mem & 0x3FFF);
+	switch (state->ext_mode) {
+		case C166_EXT_MODE_NONE: {
+			snprintf(buf, 12, "DPP%i:0x%04x", i, mem & 0x3FFF);
+			break;
+		}
+		case C166_EXT_MODE_SEG: {
+			const ut32 seg = ((ut32) (state->ext_value & 0xFF)) << 16;
+			snprintf(buf, 12, "0x%06x", seg | (mem & 0x3FFF));
+			break;
+		}
+		case C166_EXT_MODE_PAGE: {
+			const ut32 page = ((ut32) state->ext_value & 0x3FF) << 14;
+			snprintf(buf, 11, "0x%08x", page | (mem & 0x3FFF));
+			break;
+		}
+	}
 	return buf;
 }
 
-static int c166_simple_instr(struct c166_cmd *cmd, const char *instr, int ret) {
+static int c166_simple_instr(c166_cmd *cmd, const char *instr, int ret) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s", "");
 	return ret;
 }
 
-static int c166_instr_rw_rw(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rw_rw(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "r%i, r%i", (reg >> 4) & 0xF, reg & 0xF);
 	return 2;
 }
 
-static int c166_instr_rw_x(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rw_x(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 op = reg & 0xF;
 	if ((op & 0b1100) == 0b1100) {
@@ -431,32 +782,32 @@ static int c166_instr_rw_x(struct c166_cmd *cmd, const char *instr, ut8 reg) {
 	return 2;
 }
 
-static int c166_instr_rw_data4(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rw_data4(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "r%i, #0x%02x", reg & 0xF, (reg >> 4) & 0xF);
 	return 2;
 }
 
-static int c166_instr_rb_data4(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rb_data4(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, #0x%02x", c166_rb[reg & 0xF], (reg >> 4) & 0xF);
 	return 2;
 }
 
-static int c166_instr_rw_data16(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 data) {
+static int c166_instr_rw_data16(c166_cmd *cmd, const char *instr, ut8 reg, ut16 data) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "r%i, #0x%04x", reg & 0xF, data);
 	return 4;
 }
 
-static int c166_instr_rw_mem(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 data) {
+static int c166_instr_rw_mem(c166_cmd *cmd, const char *instr, ut8 reg, ut16 data) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "r%i, %s", reg & 0xF, c166_mem(tmp, data));
+	snprintf(cmd->operands, C166_MAX_OPT, "r%i, %s", reg & 0xF, c166_mem(cmd->state, tmp, data));
 	return 4;
 }
 
-static int c166_instr_rb_x(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rb_x(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 op = reg & 0xF;
 	const char *r = c166_rb[(reg >> 4) & 0xF];
@@ -473,185 +824,189 @@ static int c166_instr_rb_x(struct c166_cmd *cmd, const char *instr, ut8 reg) {
 	return 2;
 }
 
-static int c166_instr_rb_rb(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rb_rb(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_rb[(reg >> 4) & 0xF], c166_rb[reg & 0xF]);
 	return 2;
 }
 
-static int c166_instr_rw_rb(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rw_rb(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	// NOTE: It is D0 mn , NOT nm, but displayed as Rwn, Rbm
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_rw[reg & 0xF], c166_rb[(reg >> 4) & 0xF]);
 	return 2;
 }
 
-static int c166_instr_rw(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rw(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "r%i", (reg >> 4) & 0xF);
 	return 2;
 }
 
-static int c166_instr_rb(struct c166_cmd *cmd, const char *instr, ut8 reg) {
+static int c166_instr_rb(c166_cmd *cmd, const char *instr, ut8 reg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s", c166_rb[(reg >> 4) & 0xF]);
 	return 2;
 }
 
-static int c166_trap_instr(struct c166_cmd *cmd, const char *instr, ut8 trap7) {
+static int c166_trap_instr(c166_cmd *cmd, const char *instr, ut8 trap7) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut16 addr = 4 * (trap7 & 0x7F);
 	snprintf(cmd->operands, C166_MAX_OPT, "#0x%04x", addr);
 	return 2;
 }
 
-static int c166_instr_irang2(struct c166_cmd *cmd, const char *instr, ut8 irang2) {
+static int c166_instr_irang2(c166_cmd *cmd, const char *instr, ut8 irang2) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "#0x%02x", (irang2 >> 4) & 0b0011);
 	return 2;
 }
 
-static int c166_instr_rw_irang2(struct c166_cmd *cmd, const char *instr, ut8 op) {
+static int c166_instr_rw_irang2(c166_cmd *cmd, const char *instr, ut8 op) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 m = op & 0xF;
 	const ut8 irang2 = ((op >> 4) & 0b0011) + 1;
+	c166_activate_ext(cmd->state, true, C166_EXT_MODE_NONE, irang2, 0);
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, #0x%02x", c166_rw[m], irang2);
 	return 2;
 }
 
-static int c166_instr_seg_or_pag_irang2(struct c166_cmd *cmd, const char *instr, ut8 op, ut16 data, bool seg) {
+static int c166_instr_seg_or_pag_irang2(c166_cmd *cmd, const char *instr, ut8 op, ut16 data, bool seg) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 irang2 = ((op >> 4) & 0b0011) + 1;
+	const bool esfr = (op >> 7) & 1;
 	if (seg) {
+		c166_activate_ext(cmd->state, esfr, C166_EXT_MODE_SEG, irang2, data & 0xFF);
 		snprintf(cmd->operands, C166_MAX_OPT, "#0x%02x, #0x%02x", data & 0xFF, irang2);
 	} else {
+		c166_activate_ext(cmd->state, esfr, C166_EXT_MODE_PAGE, irang2, data & 0x03FF);
 		snprintf(cmd->operands, C166_MAX_OPT, "#0x%04x, #0x%02x", data & 0x03FF, irang2);
 	}
 	return 4;
 }
 
-static int c166_instr_reg_mem(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 mem, bool byte) {
+static int c166_instr_reg_mem(c166_cmd *cmd, const char *instr, ut8 reg, ut16 mem, bool byte) {
 	char tmp[16];
 	char tmp2[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_reg(tmp, reg, byte, cmd->esfr), c166_mem(tmp2, mem));
+	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_reg(cmd->state, tmp, reg, byte), c166_mem(cmd->state, tmp2, mem));
 	return 4;
 }
 
-static int c166_instr_mem_reg(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 mem, bool byte) {
+static int c166_instr_mem_reg(c166_cmd *cmd, const char *instr, ut8 reg, ut16 mem, bool byte) {
 	char tmp[16];
 	char tmp2[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_mem(tmp2, mem), c166_reg(tmp, reg, byte, cmd->esfr));
+	snprintf(cmd->operands, C166_MAX_OPT, "%s, %s", c166_mem(cmd->state, tmp2, mem), c166_reg(cmd->state, tmp, reg, byte));
 	return 4;
 }
 
-static int c166_instr_reg(struct c166_cmd *cmd, const char *instr, ut8 reg, bool byte) {
+static int c166_instr_reg(c166_cmd *cmd, const char *instr, ut8 reg, bool byte) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "%s", c166_reg(tmp, reg, byte, cmd->esfr));
+	snprintf(cmd->operands, C166_MAX_OPT, "%s", c166_reg(cmd->state, tmp, reg, byte));
 	return 2;
 }
 
-static int c166_instr_reg_data16(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 data, bool byte) {
+static int c166_instr_reg_data16(c166_cmd *cmd, const char *instr, ut8 reg, ut16 data, bool byte) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "%s, #0x%04x", c166_reg(tmp, reg, byte, cmd->esfr), data);
+	snprintf(cmd->operands, C166_MAX_OPT, "%s, #0x%04x", c166_reg(cmd->state, tmp, reg, byte), data);
 	return 4;
 }
 
-static int c166_instr_reg_data8(struct c166_cmd *cmd, const char *instr, ut8 reg, ut8 data, bool byte) {
+static int c166_instr_reg_data8(c166_cmd *cmd, const char *instr, ut8 reg, ut8 data, bool byte) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	// 8-bit immediate constant
 	// (represented by #data8, where byte xx is not significant)
 	// rz_read_at_le16 swaps so use lower
-	snprintf(cmd->operands, C166_MAX_OPT, "%s, #0x%02x", c166_reg(tmp, reg, byte, cmd->esfr), data & 0xFF);
+	snprintf(cmd->operands, C166_MAX_OPT, "%s, #0x%02x", c166_reg(cmd->state, tmp, reg, byte), data & 0xFF);
 	return 4;
 }
 
-static int c166_instr_seg_caddr(struct c166_cmd *cmd, const char *instr, ut8 seg, ut16 caddr) {
+static int c166_instr_seg_caddr(c166_cmd *cmd, const char *instr, ut8 seg, ut16 caddr) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "0x%02x, 0x%04x", seg, caddr);
 	return 4;
 }
 
-static int c166_instr_reg_caddr(struct c166_cmd *cmd, const char *instr, ut8 reg, ut16 caddr) {
+static int c166_instr_reg_caddr(c166_cmd *cmd, const char *instr, ut8 reg, ut16 caddr) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
-	snprintf(cmd->operands, C166_MAX_OPT, "%s, 0x%04x", c166_reg(tmp, reg, false, cmd->esfr), caddr);
+	snprintf(cmd->operands, C166_MAX_OPT, "%s, 0x%04x", c166_reg(cmd->state, tmp, reg, false), caddr);
 	return 4;
 }
 
-static int c166_instr_bitoff(struct c166_cmd *cmd, const char *instr, ut8 q, ut8 bitoff) {
+static int c166_instr_bitoff(c166_cmd *cmd, const char *instr, ut8 q, ut8 bitoff) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 bit = (q >> 4) & 0xF;
-	snprintf(cmd->operands, C166_MAX_OPT, "%s.%i", c166_bitoff(tmp, bitoff, cmd->esfr), bit);
+	snprintf(cmd->operands, C166_MAX_OPT, "%s.%i", c166_bitoff(cmd->state, tmp, bitoff), bit);
 	return 2;
 }
 
-static int c166_instr_bitaddr_bitaddr(struct c166_cmd *cmd, const char *instr, ut8 qq, ut8 zz, ut8 qz) {
+static int c166_instr_bitaddr_bitaddr(c166_cmd *cmd, const char *instr, ut8 qq, ut8 zz, ut8 qz) {
 	char tmpq[12];
 	char tmpz[12];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 q = (qz >> 4) & 0xF;
 	const ut8 z = qz & 0xF;
 	snprintf(cmd->operands, C166_MAX_OPT,
-		"%s.%i, %s.%i", c166_bitoff(tmpq, qq, cmd->esfr), q, c166_bitoff(tmpz, zz, cmd->esfr), z);
+		"%s.%i, %s.%i", c166_bitoff(cmd->state, tmpq, qq), q, c166_bitoff(cmd->state, tmpz, zz), z);
 	return 4;
 }
 
-static int c166_instr_bitaddr_rel(struct c166_cmd *cmd, const char *instr, ut8 qq, ut8 rr, ut8 q0) {
+static int c166_instr_bitaddr_rel(c166_cmd *cmd, const char *instr, ut8 qq, ut8 rr, ut8 q0) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 q = (q0 >> 4) & 0xF;
-	snprintf(cmd->operands, C166_MAX_OPT, "%s.%i, %i", c166_bitoff(tmp, qq, cmd->esfr), q, (st8)rr);
+	snprintf(cmd->operands, C166_MAX_OPT, "%s.%i, %i", c166_bitoff(cmd->state, tmp, qq), q, (st8)rr);
 	return 4;
 }
 
-static int c166_instr_call_rel(struct c166_cmd *cmd, const char *instr, ut8 rr) {
+static int c166_instr_call_rel(c166_cmd *cmd, const char *instr, ut8 rr) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	snprintf(cmd->operands, C166_MAX_OPT, "%i", (st8)rr);
 	return 2;
 }
 
-static int c166_instr_jmp_rel(struct c166_cmd *cmd, const char *instr, ut8 op1, ut8 rr) {
+static int c166_instr_jmp_rel(c166_cmd *cmd, const char *instr, ut8 op1, ut8 rr) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 c = (op1 >> 4) & 0xF;
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, %i", c166_cc[c], (st8)rr);
 	return 2;
 }
 
-static int c166_instr_cc_indirect(struct c166_cmd *cmd, const char *instr, ut8 op) {
+static int c166_instr_cc_indirect(c166_cmd *cmd, const char *instr, ut8 op) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 c = (op >> 4) & 0xF;
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, [r%i]", c166_cc[c], op & 0xF);
 	return 2;
 }
 
-static int c166_instr_cc_caddr(struct c166_cmd *cmd, const char *instr, ut8 op, ut16 addr) {
+static int c166_instr_cc_caddr(c166_cmd *cmd, const char *instr, ut8 op, ut16 addr) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 c = (op >> 4) & 0xF;
 	snprintf(cmd->operands, C166_MAX_OPT, "%s, 0x%04x", c166_cc[c], addr);
 	return 4;
 }
 
-static int c166_instr_bfld(struct c166_cmd *cmd, const char *instr, ut8 bitoff, ut8 opt1, ut8 opt2, bool high) {
+static int c166_instr_bfld(c166_cmd *cmd, const char *instr, ut8 bitoff, ut8 opt1, ut8 opt2, bool high) {
 	char tmp[16];
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	if (high) {
 		snprintf(cmd->operands, C166_MAX_OPT,
-			"%s, #0x%02x, #0x%02x", c166_bitoff(tmp, bitoff, cmd->esfr), opt2, opt1);
+			"%s, #0x%02x, #0x%02x", c166_bitoff(cmd->state, tmp, bitoff), opt2, opt1);
 	} else {
 		snprintf(cmd->operands, C166_MAX_OPT,
-			"%s, #0x%02x, #0x%02x", c166_bitoff(tmp, bitoff, cmd->esfr), opt1, opt2);
+			"%s, #0x%02x, #0x%02x", c166_bitoff(cmd->state, tmp, bitoff), opt1, opt2);
 	}
 	return 4;
 }
 
 static int c166_instr_mov_nm(
-	struct c166_cmd *cmd,
+	c166_cmd *cmd,
 	const char *instr,
 	const char *format,
 	ut8 op,
@@ -669,19 +1024,19 @@ static int c166_instr_mov_nm(
 	return 2;
 }
 
-static int c166_instr_mov_mem_oRw(struct c166_cmd *cmd, const char *instr, ut8 op, ut16 mem, bool swap) {
+static int c166_instr_mov_mem_oRw(c166_cmd *cmd, const char *instr, ut8 op, ut16 mem, bool swap) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 n = op & 0xF;
 	char tmp[16];
 	if (swap) {
-		snprintf(cmd->operands, C166_MAX_OPT, "[%s], %s", c166_rw[n], c166_mem(tmp, mem));
+		snprintf(cmd->operands, C166_MAX_OPT, "[%s], %s", c166_rw[n], c166_mem(cmd->state, tmp, mem));
 	} else {
-		snprintf(cmd->operands, C166_MAX_OPT, "%s, [%s]", c166_mem(tmp, mem), c166_rw[n]);
+		snprintf(cmd->operands, C166_MAX_OPT, "%s, [%s]", c166_mem(cmd->state, tmp, mem), c166_rw[n]);
 	}
 	return 4;
 }
 
-static int c166_instr_mov_nm_data(struct c166_cmd *cmd, const char *instr, ut8 op, ut16 mem, const char **n_map, bool swap) {
+static int c166_instr_mov_nm_data(c166_cmd *cmd, const char *instr, ut8 op, ut16 mem, const char **n_map, bool swap) {
 	snprintf(cmd->instr, C166_MAX_OPT, "%s", instr);
 	const ut8 n = (op >> 4) & 0xF;
 	const ut8 m = op & 0xF;
@@ -693,7 +1048,13 @@ static int c166_instr_mov_nm_data(struct c166_cmd *cmd, const char *instr, ut8 o
 	return 4;
 }
 
-int c166_decode_command(const ut8 *instr, struct c166_cmd *cmd, int len) {
+
+int c166_decode_command(const ut8 *instr, c166_cmd *cmd, int len) {
+	cmd->state = c166_get_state();
+	if (!cmd->state) {
+		RZ_LOG_FATAL("c166_state was NULL.");
+	}
+	c166_maybe_deactivate_ext(cmd->state);
 	if (len >= 4) {
 		switch (instr[0]) {
 		case C166_ADD_reg_mem:
@@ -1030,10 +1391,12 @@ int c166_decode_command(const ut8 *instr, struct c166_cmd *cmd, int len) {
 
 		case C166_ATOMIC_or_EXTR_irang2: {
 			const ut8 sub_op  = (instr[1] >> 6) & 0b11;
-			if (sub_op == 0b00)
+			if (sub_op == 0b00) {
 				return c166_instr_irang2(cmd, "atomic", instr[1]);
-			else if (sub_op == 0b10)
+			} else if (sub_op == 0b10) {
+				c166_activate_ext(cmd->state, true, C166_EXT_MODE_NONE, instr[1] & 3, 0);
 				return c166_instr_irang2(cmd, "extr", instr[1]);
+			}
 			break;
 		}
 		case C166_EXTP_or_EXTS_Rwm_irang2:

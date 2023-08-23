@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 #include <rz_types.h>
 #include <rz_analysis.h>
-
-#include "../asm/arch/c166/c166_dis.h"
 #include <rz_util/rz_str_util.h>
+#include "../asm/arch/c166/c166_dis.h"
 
 enum c166_ext_mode {
 	C166_ext_none,
@@ -105,14 +104,6 @@ static const char* c166_mmio_reg(const ut32 addr) {
 static void c166_set_mimo_addr_from_reg(RzAnalysisOp *op, ut16 reg) {
 	if (reg < 0xF0) {
 		op->mmio_address = 0xFE00 + (2 * reg);
-	}
-}
-
-static void c166_set_mimo_addr_from_bitoff(RzAnalysisOp *op, ut16 reg) {
-	if (reg < 0x80) {
-		op->mmio_address = 0xFD00 + 2 * reg;
-	} else if (reg < 0xF0) {
-		op->mmio_address = 0xFF00 + 2 * (reg & 0x7F);
 	}
 }
 
@@ -498,7 +489,7 @@ static void c166_op_bfld(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf)
 }
 
 static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *buf, int len, RzAnalysisOpMask mask) {
-	struct c166_cmd cmd;
+	c166_cmd cmd;
 	if (!op) {
 		return 1;
 	}
@@ -735,11 +726,10 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		op->type = RZ_ANALYSIS_OP_TYPE_RET;
 		break;
 	case C166_RETS:
-		c166_op_ret(analysis, op, buf);
+		c166_op_rets(analysis, op, buf);
 		break;
 	case C166_RETP_reg:
-		op->type = RZ_ANALYSIS_OP_TYPE_RET;
-		c166_set_mimo_addr_from_reg(op, buf[1]);
+		c166_op_retp(analysis, op, buf);
 		break;
 	case C166_POP_reg:
 		op->type = RZ_ANALYSIS_OP_TYPE_POP;

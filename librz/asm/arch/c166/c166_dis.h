@@ -6,51 +6,35 @@
 
 #define C166_MAX_OPT 31
 
-struct c166_cmd {
-	bool esfr;
+typedef enum {
+	C166_EXT_MODE_NONE,
+	C166_EXT_MODE_PAGE,
+	C166_EXT_MODE_SEG,
+} c166_ext_mode;
+
+typedef struct {
+	bool esfr;  // Extended register sequence active
+	// Extended page/seq mode
+	c166_ext_mode ext_mode;
+	// Value of ext
+	ut16 ext_value;
+	// Number of unstructions remaining until state exits
+	ut8 i;
+} c166_state;
+
+typedef struct {
+	c166_state* state;
 	char instr[32];
 	char operands[32];
-};
+} c166_cmd;
 
-static const char *c166_rw[] = {
-	"r0",
-	"r1",
-	"r2",
-	"r3",
-	"r4",
-	"r5",
-	"r6",
-	"r7",
-	"r8",
-	"r9",
-	"r10",
-	"r11",
-	"r12",
-	"r13",
-	"r14",
-	"r15",
-};
+extern const char *c166_rw[];
+extern const char *c166_rb[];
+extern const char *c166_cc[];
+extern const char *c166_extx_names[];
+extern const ut8 c166_opcode_sizes[];
 
-static const char *c166_rb[] = {
-	"rl0",
-	"rh0",
-	"rl1",
-	"rh1",
-	"rl2",
-	"rh2",
-	"rl3",
-	"rh3",
-	"rl4",
-	"rh4",
-	"rl5",
-	"rh5",
-	"rl6",
-	"rh6",
-	"rl7",
-	"rh7",
-};
-
-enum c166_opcodes {
+typedef enum  {
 	C166_ADD_Rwn_Rwm = 0x00,
 	C166_ADDB_Rbn_Rbm = 0x01,
 	C166_ADD_reg_mem = 0x02,
@@ -322,8 +306,15 @@ enum c166_opcodes {
 	C166_JMPR_cc_ULE_rel = 0xFD,
 	C166_BCLR_bitoff15 = 0xFE,
 	C166_BSET_bitoff15 = 0xFF,
-};
+} c166_opcodes;
 
-int c166_decode_command(const ut8 *instr, struct c166_cmd *cmd, int len);
+
+
+RZ_API int c166_decode_command(const ut8 *instr, c166_cmd *cmd, int len);
+
+RZ_API c166_state* c166_get_state();
+RZ_API void c166_activate_ext(RZ_NONNULL c166_state* state, bool esfr, c166_ext_mode mode, ut8 count, ut16 value);
+RZ_API void c166_maybe_deactivate_ext(RZ_NONNULL c166_state* state);
+
 
 #endif /* RZ_C166_DIS_H */
