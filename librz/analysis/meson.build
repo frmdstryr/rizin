@@ -171,7 +171,7 @@ rz_analysis_sources = [
   'arch/8051/8051_parse.c',
   '../asm/arch/amd29k/amd29k.c',
   '../asm/arch/avr/disassembler.c',
-  '../asm/arch/c166/c166_dis.c',
+  '../asm/arch/c166/c166_arch.c',
   '../asm/arch/cil/cil_dis.c',
   '../asm/arch/cr16/cr16_disas.c',
   '../asm/arch/ebc/ebc_disas.c',

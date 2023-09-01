@@ -4,29 +4,33 @@
 #ifndef RZ_C166_DIS_H
 #define RZ_C166_DIS_H
 
-#define C166_MAX_OPT 31
+#include <rz_asm.h>
+
+#define C166_MAX_TEXT 63
 
 typedef enum {
 	C166_EXT_MODE_NONE,
 	C166_EXT_MODE_PAGE,
 	C166_EXT_MODE_SEG,
-} c166_ext_mode;
+} C166ExtMode;
 
 typedef struct {
 	bool esfr;  // Extended register sequence active
-	// Extended page/seq mode
-	c166_ext_mode ext_mode;
-	// Value of ext
-	ut16 ext_value;
-	// Number of unstructions remaining until state exits
-	ut8 i;
-} c166_state;
+	C166ExtMode mode; // Extended page/seq mode
+	ut8 i; // Number of unstructions remaining until state exits
+	ut16 value; // Value of ext
+} C166ExtState;
 
 typedef struct {
-	c166_state* state;
-	char instr[32];
-	char operands[32];
-} c166_cmd;
+	ut32 last_addr; // State of last addr dissassembled
+	C166ExtState ext;
+} C166State;
+
+typedef struct {
+	C166ExtState ext;
+	ut32 addr;
+	char text[64];
+} C166Instr;
 
 extern const char *c166_rw[];
 extern const char *c166_rb[];
@@ -310,11 +314,10 @@ typedef enum  {
 
 
 
-RZ_API int c166_decode_command(const ut8 *instr, c166_cmd *cmd, int len);
-
-RZ_API c166_state* c166_get_state();
-RZ_API void c166_activate_ext(RZ_NONNULL c166_state* state, bool esfr, c166_ext_mode mode, ut8 count, ut16 value);
-RZ_API void c166_maybe_deactivate_ext(RZ_NONNULL c166_state* state);
+RZ_API int c166_disassemble_instruction(RZ_NONNULL C166State* state, C166Instr* instr, const ut8 *buf, int len, ut32 addr);
+RZ_API C166State* c166_get_state();
+RZ_API void c166_activate_ext(RZ_NONNULL C166State* state, ut32 addr, C166ExtState ext);
+RZ_API void c166_maybe_deactivate_ext(RZ_NONNULL C166State* state, ut32 addr);
 
 
 #endif /* RZ_C166_DIS_H */

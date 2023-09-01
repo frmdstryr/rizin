@@ -3,31 +3,9 @@
 #include <rz_types.h>
 #include <rz_analysis.h>
 #include <rz_util/rz_str_util.h>
-#include "../asm/arch/c166/c166_dis.h"
+#include "../asm/arch/c166/c166_arch.h"
 
-enum c166_ext_mode {
-	C166_ext_none,
-	C166_ext_atomic, // extr
 
-	// page is the starting address of a 16K memory segment
-	C166_ext_page, // extp #pag10
-	C166_ext_page_reg, // extpr
-
-	// seg is the starting address of a 64K memory segment
-	C166_ext_seg, // exts #pag10
-	C166_ext_seg_reg, // extsr Rw
-};
-
-typedef struct c166_context_t {
-	// Address of last ext instr
-	ut32 ext_addr;
-	// Value of last ext instr
-	ut16 ext_value;
-	// Count of last ext instr
-	ut8 ext_count;
-	// Extended addressing mode
-	enum c166_ext_mode ext_mode;
-} c166_context_t;
 
 static RzTypeCond c166_cc_to_cond(ut8 cc) {
 	// See table 5 in C166 ISM
@@ -101,10 +79,26 @@ static const char* c166_mmio_reg(const ut32 addr) {
 	}
 }
 
-static void c166_set_mimo_addr_from_reg(RzAnalysisOp *op, ut16 reg) {
+static void c166_set_mimo_addr_from_reg(RzAnalysisOp *op, ut8 reg) {
 	if (reg < 0xF0) {
 		op->mmio_address = 0xFE00 + (2 * reg);
 	}
+}
+
+static void c166_set_mimo_addr_from_bitoff(RzAnalysisOp *op, ut8 bitoff, bool esfr) {
+	if (bitoff < 0xF0) {
+		// RAM
+		op->mmio_address = 0xFD00 + (2 * bitoff);
+	} else if (bitoff < 0xE0) {
+		// SFR/EESFR
+		const ut16 addr = (2 * (bitoff & 0x7F));
+		const ut16 base = (esfr) ? 0xF100 : 0xFF00;
+		op->mmio_address = base + addr;
+	} else {
+		// GPR
+		op->mmio_address = 0xFE00 + (2 * (bitoff & 0x0F));
+	}
+
 }
 
 static void c166_set_jump_target_from_caddr(RzAnalysisOp *op, ut16 target) {
@@ -128,7 +122,7 @@ static void c166_set_jump_target_seg_caddr(RzAnalysisOp *op, ut8 seg, ut16 targe
 	op->jump = (((ut32) seg) << 16) | (target & 0xFFFE);
 }
 
-static RzAnalysisValue* c166_new_reg_value(RzAnalysis *analysis, ut8 reg, bool byte) {
+static RzAnalysisValue* c166_new_reg_value(const RzAnalysis *analysis, ut8 reg, bool byte) {
 	RzAnalysisValue *val = rz_analysis_value_new();
 	val->type = RZ_ANALYSIS_VAL_REG;
 	if (reg < 0xF0) {
@@ -159,8 +153,7 @@ static RzAnalysisValue* c166_new_gpr_value(RzAnalysis *analysis, ut8 i, bool byt
 	return val;
 }
 
-static RzAnalysisValue* c166_new_mem_value(RzAnalysis *analysis, ut16 mem) {
-	c166_context_t *ctx = (c166_context_t *) analysis->plugin_data;
+static RzAnalysisValue* c166_new_mem_value(const RzAnalysis *analysis, const C166Instr *instr, ut16 mem) {
 	RzAnalysisValue *val = rz_analysis_value_new();
 	val->type = RZ_ANALYSIS_VAL_MEM;
 	RzRegItem* reg;
@@ -174,28 +167,17 @@ static RzAnalysisValue* c166_new_mem_value(RzAnalysis *analysis, ut16 mem) {
 		reg = rz_reg_get(analysis->reg, "DPP3", RZ_REG_TYPE_GPR);
 	}
 
-	switch (ctx->ext_mode) {
-		case C166_ext_none:
-		case C166_ext_atomic:
+	switch (instr->ext.mode) {
+		case C166_EXT_MODE_NONE:
 			val->reg = reg;
 			val->base = rz_reg_get_value(analysis->reg, reg) << 14;
 			break;
-		case C166_ext_seg:
-			val->base = ((ut32) ctx->ext_value) << 16;
+		case C166_EXT_MODE_SEG:
+			val->base = ((ut32) instr->ext.value) << 16;
 			break;
-		case C166_ext_seg_reg:
-			// Read segment from register
-			val->reg = rz_reg_get(analysis->reg, c166_rw[ctx->ext_value & 0xF], RZ_REG_TYPE_GPR);
-			val->base = rz_reg_get_value(analysis->reg, val->reg) << 16;
-			break;
-		case C166_ext_page:
+		case C166_EXT_MODE_PAGE:
 			val->reg = reg;
-			val->base = ((ut32) ctx->ext_value) << 14;
-			break;
-		case C166_ext_page_reg:
-			// Read page from register
-			val->reg = rz_reg_get(analysis->reg, c166_rw[ctx->ext_value & 0xF], RZ_REG_TYPE_GPR);
-			val->base = rz_reg_get_value(analysis->reg, val->reg) << 14;
+			val->base = ((ut32) instr->ext.value) << 14;
 			break;
 	}
 	val->base += mem & 0x3FFF;
@@ -210,15 +192,14 @@ static RzAnalysisValue* c166_new_imm_value(ut16 data, bool absolute) {
 	return val;
 }
 
-static RzAnalysisValue* c166_new_bitaddr_value(RzAnalysis *analysis, ut8 bitoff) {
-	c166_context_t *ctx = (c166_context_t *) analysis->plugin_data;
+static RzAnalysisValue* c166_new_bitaddr_value(const RzAnalysis *analysis, const C166Instr* instr, ut8 bitoff) {
 	RzAnalysisValue *val = rz_analysis_value_new();
 	val->type = RZ_ANALYSIS_VAL_MEM;
 	if (bitoff >= 0xF0) {
 		val->reg = rz_reg_get(analysis->reg, c166_rw[bitoff & 0xF], RZ_REG_TYPE_GPR);
 		val->base = rz_reg_get_value(analysis->reg, val->reg);
 	} else if (bitoff >= 0x80) {
-		if (ctx->ext_mode == C166_ext_page_reg || ctx->ext_mode == C166_ext_seg_reg) {
+		if (instr->ext.esfr) {
 			val->base = 0xF100 + (2 * (bitoff & 0x7F));
 		} else {
 			val->base = 0xFF00 + (2 * (bitoff & 0x7F));
@@ -321,33 +302,30 @@ static void c166_op_retp(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf)
 }
 
 static void c166_op_ext(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
-	c166_context_t *ctx = (c166_context_t *) analysis->plugin_data;
 	const ut8 irang2 = ((buf[1] >> 4) & 0b11) + 1;
 	const ut8 subop = (buf[1] >> 6) & 0b11;
 	// subop 00=exts, 01=extp, 10=extsr, 11=expr
-	switch (buf[0]) {
-	case C166_EXTP_or_EXTS_Rwm_irang2: // DC
-		if (subop == 0 || subop == 2) {
-			ctx->ext_mode = C166_ext_seg_reg;
-		} else {
-			ctx->ext_mode = C166_ext_page_reg;
-		}
-		ctx->ext_value = buf[1] & 0xF;
-		break;
-	case C166_EXTP_or_EXTS_pag10_or_seg8_irang2: // D7
-		if (subop == 0 || subop == 2) {
-			ctx->ext_mode = C166_ext_seg;
-		} else {
-			ctx->ext_mode = C166_ext_page;
-		}
-		ctx->ext_value = rz_read_at_le16(buf, 2);
-		break;
-	default:
-		rz_warn_if_reached();
-		break;
-	}
-	ctx->ext_addr = op->addr;
-	ctx->ext_count = irang2;
+	// switch (buf[0]) {
+	// case C166_EXTP_or_EXTS_Rwm_irang2: // DC
+	// 	if (subop == 0 || subop == 2) {
+	// 		ctx->ext_mode = C166_ext_seg_reg;
+	// 	} else {
+	// 		ctx->ext_mode = C166_ext_page_reg;
+	// 	}
+	// 	ctx->ext_value = buf[1] & 0xF;
+	// 	break;
+	// case C166_EXTP_or_EXTS_pag10_or_seg8_irang2: // D7
+	// 	if (subop == 0 || subop == 2) {
+	// 		ctx->ext_mode = C166_ext_seg;
+	// 	} else {
+	// 		ctx->ext_mode = C166_ext_page;
+	// 	}
+	// 	ctx->ext_value = rz_read_at_le16(buf, 2);
+	// 	break;
+	// default:
+	// 	rz_warn_if_reached();
+	// 	break;
+	// }
 	op->delay = irang2;
 }
 
@@ -428,6 +406,13 @@ static void c166_op_call_rel(RzAnalysisOp *op, const ut8 *buf) {
 
 }
 
+static void c166_op_call_cc_caddr(RzAnalysisOp *op, const ut8 *buf) {
+	op->type = RZ_ANALYSIS_OP_TYPE_CCALL;
+	op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
+	c166_set_jump_target_from_caddr(op, rz_read_at_le16(buf, 2));
+	op->fail = op->addr + op->size;
+}
+
 static void c166_op_mov_reg_data(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
 	const ut8 reg = buf[1];
 	const bool byte = buf[0] == C166_MOVB_reg_data8;
@@ -448,13 +433,13 @@ static void c166_op_mov_reg_data(RzAnalysis *analysis, RzAnalysisOp *op, const u
 	}
 }
 
-static void c166_op_mov_reg_mem(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
+static void c166_op_mov_reg_mem(const RzAnalysis *analysis, RzAnalysisOp *op, const C166Instr* instr, const ut8 *buf) {
 	op->type = RZ_ANALYSIS_OP_TYPE_MOV;
 	const bool byte = buf[0] != C166_MOV_reg_mem;
 	const ut16 mask = byte ? 0xFF : 0xFFFF;
 	const ut32 addr = rz_read_at_le16(buf, 2) & mask;
 	op->dst = c166_new_reg_value(analysis, buf[1], byte);
-	op->src[0] = c166_new_mem_value(analysis, addr);
+	op->src[0] = c166_new_mem_value(analysis, instr, addr);
 	if (op->dst != NULL) {
 		op->mmio_address = op->dst->base;
 		if (op->dst->reg != NULL) {
@@ -467,9 +452,9 @@ static void c166_op_mov_reg_mem(RzAnalysis *analysis, RzAnalysisOp *op, const ut
 
 }
 
-static void c166_op_bfld(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
+static void c166_op_bfld(const RzAnalysis *analysis, RzAnalysisOp *op, const C166Instr *instr,const ut8 *buf) {
 	op->type = RZ_ANALYSIS_OP_TYPE_STORE;
-	op->dst = c166_new_bitaddr_value(analysis, buf[1]);
+	op->dst = c166_new_bitaddr_value(analysis, instr, buf[1]);
 	const bool high = buf[0] == C166_BFLDH_bitoff_x;
 	const ut16 mask = ~(high ? (buf[2] << 8) : buf[1]);
 	const ut16 val = high ? (buf[3] << 8) : buf[3];
@@ -488,30 +473,37 @@ static void c166_op_bfld(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf)
 
 }
 
+static void c166_op_jmp_bitoff(const RzAnalysis *analysis, RzAnalysisOp *op, const RzTypeCond cond, const C166Instr* instr, const ut8 *buf) {
+	op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
+	op->cond = cond;
+	op->jump = op->addr + op->size + (2 * ((st8)buf[2]));
+	op->fail = op->addr + op->size;
+	op->src[0] = c166_new_bitaddr_value(analysis, instr, buf[1]);
+	if (op->src[0]) {
+		op->mmio_address = op->src[0]->base;
+	}
+}
+
 static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 *buf, int len, RzAnalysisOpMask mask) {
-	c166_cmd cmd;
-	if (!op) {
-		return 1;
+	rz_return_val_if_fail(analysis && op && buf, -1);
+	if (len < 2) {
+		return -1;
 	}
 	// if (analysis->pcalign == 0) {
 	// 	analysis->pcalign = 2;
 	// }
-	c166_context_t *ctx = (c166_context_t *) analysis->plugin_data;
-	const ut8 size = c166_decode_command(buf, &cmd, len);
-	if (size < 0) {
-		return size;
+	C166State *state = c166_get_state();
+	if (!state) {
+		RZ_LOG_FATAL("C166ExtState was NULL.");
 	}
+	C166Instr instr;
+	op->size = c166_disassemble_instruction(state, &instr, buf, len, addr);
+	if (op->size < 0) {
+		return op->size;
+	}
+
 	op->addr = addr;
 	op->type = RZ_ANALYSIS_OP_TYPE_UNK;
-	op->size = size;
-	op->nopcode = size;
-
-	// TODO: Are instructions called in order?
-	if (ctx->ext_count > 0) {
-		ctx->ext_count -= 1;
-	} else if (ctx->ext_count == 0) {
-		ctx->ext_mode = C166_ext_none;
-	}
 
 	rz_strbuf_init(&op->esil);
 	rz_strbuf_set(&op->esil, "");
@@ -703,19 +695,19 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_BSET_bitoff14:
 	case C166_BSET_bitoff15:
 		op->type = RZ_ANALYSIS_OP_TYPE_STORE;
-		op->dst = c166_new_bitaddr_value(analysis, buf[1]);
+		op->dst = c166_new_bitaddr_value(analysis, &instr, buf[1]);
 		if (op->dst)
 			op->mmio_address = op->dst->base;
 		break;
 	case C166_BFLDH_bitoff_x:
 	case C166_BFLDL_bitoff_x:
-		c166_op_bfld(analysis, op, buf);
+		c166_op_bfld(analysis, op, &instr, buf);
 		break;
 	case C166_BMOV_bitaddr_bitaddr:
 	case C166_BMOVN_bitaddr_bitaddr:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->dst = c166_new_bitaddr_value(analysis, buf[1]);
-		op->src[0] = c166_new_bitaddr_value(analysis, buf[2]);
+		op->dst = c166_new_bitaddr_value(analysis, &instr, buf[1]);
+		op->src[0] = c166_new_bitaddr_value(analysis, &instr, buf[2]);
 		if (op->dst)
 			op->mmio_address = op->dst->base;
 		break;
@@ -804,7 +796,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	// TODO: Sign/zero extend with esil
 	// case C166_MOVBS_reg_mem:
 	// case C166_MOVBZ_reg_mem:
-		c166_op_mov_reg_mem(analysis, op, buf);
+		c166_op_mov_reg_mem(analysis, op, &instr, buf);
 		break;
 	case C166_MOV_mem_reg:
 	case C166_MOVB_mem_reg:
@@ -812,21 +804,21 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_MOVBZ_mem_reg:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
 		op->src[0] = c166_new_reg_value(analysis, buf[1], buf[0] != C166_MOV_mem_reg);
-		op->dst = c166_new_mem_value(analysis, rz_read_at_le16(buf, 2));
+		op->dst = c166_new_mem_value(analysis, &instr, rz_read_at_le16(buf, 2));
 		if (op->dst)
 			op->mmio_address = op->dst->base;
 		break;
 	case C166_MOV_mem_oRwn:
 	case C166_MOVB_mem_oRwn:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->dst = c166_new_mem_value(analysis, rz_read_at_le16(buf, 2));
+		op->dst = c166_new_mem_value(analysis, &instr, rz_read_at_le16(buf, 2));
 		if (op->dst)
 			op->mmio_address = op->dst->base;
 		break;
 	case C166_MOV_oRwn_mem:
 	case C166_MOVB_oRwn_mem: {
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->src[0] = c166_new_mem_value(analysis, rz_read_at_le16(buf, 2));
+		op->src[0] = c166_new_mem_value(analysis, &instr, rz_read_at_le16(buf, 2));
 		if (op->src[0])
 			op->mmio_address = op->src[0]->base;
 		break;
@@ -886,19 +878,11 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		break;
 	case C166_JB_bitaddr_rel:
 	case C166_JBC_bitaddr_rel:
-		op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
-		op->cond = RZ_TYPE_COND_EQ;
-		op->jump = addr + op->size + (2 * ((st8)buf[2]));
-		op->fail = addr + op->size;
-		c166_set_mimo_addr_from_reg(op, buf[1]);
+		c166_op_jmp_bitoff(analysis, op, RZ_TYPE_COND_EQ, &instr, buf);
 		break;
 	case C166_JNB_bitaddr_rel:
 	case C166_JNBS_bitaddr_rel:
-		op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
-		op->cond = RZ_TYPE_COND_NE;
-		op->jump = addr + op->size + (2 * ((st8)buf[2]));
-		op->fail = addr + op->size;
-		c166_set_mimo_addr_from_reg(op, buf[1]);
+		c166_op_jmp_bitoff(analysis, op, RZ_TYPE_COND_NE, &instr, buf);
 		break;
 	case C166_JMPA_cc_caddr:
 		op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
@@ -941,10 +925,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		c166_op_jmps_seg_caddr(op, buf);
 		break;
 	case C166_CALLA_cc_caddr:
-		op->type = RZ_ANALYSIS_OP_TYPE_CCALL;
-		op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
-		c166_set_jump_target_from_caddr(op, rz_read_at_le16(buf, 2));
-		op->fail = addr + op->size;
+		c166_op_call_cc_caddr(op, buf);
 		break;
 	case C166_CALLI_cc_Rwn:
 		op->type = RZ_ANALYSIS_OP_TYPE_IRCALL;
@@ -972,6 +953,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	//rz_strbuf_fini(&op->esil);
 	return op->size;
 }
+
 
 static char *get_reg_profile(RzAnalysis *analysis) {
 	const char *p =
@@ -1051,27 +1033,6 @@ static int archinfo(RzAnalysis *a, RzAnalysisInfoType query) {
 	}
 }
 
-static bool init(void **user) {
-	c166_context_t *ctx = RZ_NEW0(c166_context_t);
-	if (!ctx) {
-		return false;
-	}
-	ctx->ext_addr = 0;
-	ctx->ext_count = 0;
-	ctx->ext_value = 0;
-	ctx->ext_mode = C166_ext_none;
-	*user = ctx;
-	return true;
-}
-
-
-static bool fini(void *user) {
-	rz_return_val_if_fail(user, false);
-	c166_context_t *ctx = (c166_context_t *)user;
-	free(ctx);
-	return true;
-}
-
 RzAnalysisPlugin rz_analysis_plugin_c166 = {
 	.name = "c166",
 	.desc = "Bosch/Siemens C166 analysis plugin",
@@ -1082,8 +1043,6 @@ RzAnalysisPlugin rz_analysis_plugin_c166 = {
 	.op = &c166_op,
 	.archinfo = &archinfo,
 	.get_reg_profile = &get_reg_profile,
-	.init = &init,
-	.fini = &fini,
 };
 
 #ifndef RZ_PLUGIN_INCORE

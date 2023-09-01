@@ -151,7 +151,7 @@ rz_asm_sources = [
   'arch/arm/arm_it.c',
   'arch/avr/disassembler.c',
   'arch/avr/assembler.c',
-  'arch/c166/c166_dis.c',
+  'arch/c166/c166_arch.c',
   'arch/cil/cil_dis.c',
   'arch/cr16/cr16_disas.c',
   #'arch/dcpu16/asm.c',

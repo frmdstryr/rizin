@@ -3,13 +3,34 @@
 #include <rz_util.h>
 #include <rz_bin.h>
 
-static bool check_buffer(RzBuffer *buf) {
+
+// Modified from one in analysis_riscv
+// First arg is checked against all others
+#define is_any_n(...) _is_any_n(__VA_ARGS__, NULL)
+static bool _is_any_n(const char *str, size_t n, ...) {
+	char *cur;
+	va_list va;
+	va_start(va, n);
+	while (true) {
+		cur = va_arg(va, char *);
+		if (!cur) {
+			break;
+		}
+		if (!strncmp(str, cur, n)) {
+			va_end(va);
+			return true;
+		}
+	}
+	va_end(va);
+	return false;
+}
+
+// Check if file starts with a vector table
+static bool is_c166_vector_table(RzBuffer *buf) {
+	if (rz_buf_size(buf) < 64)
+		return false;
 	ut8 c = 0;
 	ut8 i = 0;
-	if (rz_buf_size(buf) < 64) {
-		return false;
-	}
-	// Should point to vector table with a bunch of jmps
 	while (i < 64) {
 		if (!rz_buf_read8_at(buf, i, &c) || c != 0xFA) {
 			return false; // Not a jmp
@@ -17,6 +38,30 @@ static bool check_buffer(RzBuffer *buf) {
 		i += 4;
 	}
 	return true;
+}
+
+// Look for p....C166 or p....A166
+static bool is_c166_header(RzBuffer *buf) {
+	if (rz_buf_size(buf) < 64)
+		return false;
+	ut8 c = 0;
+	if (!rz_buf_read8_at(buf, 0, &c) || c != 'p')
+		return false;
+	ut8 in[5];
+	if (!rz_buf_read_at(buf, 5, in, sizeof(in))
+		|| !is_any_n((const char *) in, sizeof(in), "C166 ", "A166 ")) {
+		return false;
+	}
+
+	return true;
+}
+
+static bool check_buffer(RzBuffer *buf) {
+	if (is_c166_vector_table(buf))
+		return true;
+	if (is_c166_header(buf))
+		return true;
+	return false;
 }
 
 static bool load_buffer(RzBinFile *bf, RzBinObject *obj, RzBuffer *buf, Sdb *sdb) {
@@ -87,6 +132,7 @@ static RzBinInfo *info(RzBinFile *arch) {
 	ret->os = strdup("c166");
 	ret->arch = strdup("c166");
 	ret->bits = 16;
+	ret->rclass = "keil";
 
 	return ret;
 }
