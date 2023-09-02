@@ -828,8 +828,28 @@ static int c166_instr_rw_rb(C166Instr *instr, const char *name, ut8 reg) {
 	return 2;
 }
 
-static int c166_instr_rw(C166Instr *instr, const char *name, ut8 reg) {
-	snprintf(instr->text, C166_MAX_TEXT, "%s r%i", name, (reg >> 4) & 0xF);
+static int c166_instr_rw(C166Instr *instr, const char *name, ut8 op, ut8 reg) {
+	const ut8 n = (reg >> 4) & 0xF;
+	switch (op) {
+		case C166_NEG_Rwn:
+		case C166_CPL_Rwn:
+			if ((reg & 0xF) != 0) {
+				return -1;
+			}
+			break;
+		case C166_DIV_Rwn:
+		case C166_DIVL_Rwn:
+		case C166_DIVLU_Rwn:
+		case C166_DIVU_Rwn:
+			if ((reg & 0xF) != n) {
+				return -1;
+			}
+			break;
+		default:
+			rz_warn_if_reached();
+			return -1;
+	}
+	snprintf(instr->text, C166_MAX_TEXT, "%s r%i", name, n);
 	return 2;
 }
 
@@ -1241,9 +1261,10 @@ int c166_disassemble_instruction(RZ_NONNULL C166State* state, C166Instr* instr, 
 		case C166_DIVL_Rwn:
 		case C166_DIVLU_Rwn:
 		case C166_DIVU_Rwn:
+			return c166_instr_rw(instr, name, buf[0], buf[1]);
 		case C166_NEG_Rwn:
 		case C166_CPL_Rwn:
-			return c166_instr_rw(instr, name, buf[1]);
+			return c166_instr_rw(instr, name, buf[0], buf[1]);
 		case C166_NEGB_Rbn:
 		case C166_CPLB_Rbn:
 			return c166_instr_rb(instr, name, buf[1]);
