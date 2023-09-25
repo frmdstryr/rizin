@@ -1046,155 +1046,6 @@ int c166_disassemble_instruction(RZ_NONNULL C166State* state, C166Instr* instr, 
 	instr->ext = state->ext; // Copy state
 	c166_maybe_deactivate_ext(state, addr);
 	const char * name = c166_instr_name(buf[0]);
-	if (len >= 4) {
-		switch (buf[0]) {
-		case C166_ADD_reg_mem:
-		case C166_ADDC_reg_mem:
-		case C166_SUB_reg_mem:
-		case C166_SUBC_reg_mem:
-		case C166_AND_reg_mem:
-		case C166_OR_reg_mem:
-		case C166_XOR_reg_mem:
-		case C166_CMP_reg_mem:
-		case C166_MOV_reg_mem:
-		case C166_SCXT_reg_mem:
-			return c166_instr_reg_mem(instr, name, buf[1], rz_read_at_le16(buf, 2), false);
-		case C166_ADDB_reg_mem:
-		case C166_ADDCB_reg_mem:
-		case C166_SUBB_reg_mem:
-		case C166_SUBCB_reg_mem:
-		case C166_ANDB_reg_mem:
-		case C166_ORB_reg_mem:
-		case C166_XORB_reg_mem:
-		case C166_CMPB_reg_mem:
-		case C166_MOVB_reg_mem:
-		case C166_MOVBS_reg_mem:
-		case C166_MOVBZ_reg_mem:
-			return c166_instr_reg_mem(instr, name, buf[1], rz_read_at_le16(buf, 2), true);
-		case C166_ADD_mem_reg:
-		case C166_ADDC_mem_reg:
-		case C166_SUB_mem_reg:
-		case C166_SUBC_mem_reg:
-		case C166_AND_mem_reg:
-		case C166_OR_mem_reg:
-		case C166_XOR_mem_reg:
-		case C166_MOV_mem_reg:
-			return c166_instr_mem_reg(instr, name, buf[1], rz_read_at_le16(buf, 2), false);
-		case C166_ADDB_mem_reg:
-		case C166_ADDCB_mem_reg:
-		case C166_SUBB_mem_reg:
-		case C166_SUBCB_mem_reg:
-		case C166_ANDB_mem_reg:
-		case C166_ORB_mem_reg:
-		case C166_XORB_mem_reg:
-		case C166_MOVB_mem_reg:
-		case C166_MOVBS_mem_reg:
-		case C166_MOVBZ_mem_reg:
-			return c166_instr_mem_reg(instr, name, buf[1], rz_read_at_le16(buf, 2), true);
-		case C166_ADD_reg_data16:
-		case C166_ADDC_reg_data16:
-		case C166_SUB_reg_data16:
-		case C166_SUBC_reg_data16:
-		case C166_AND_reg_data16:
-		case C166_OR_reg_data16:
-		case C166_XOR_reg_data16:
-		case C166_CMP_reg_data16:
-		case C166_MOV_reg_data16:
-		case C166_SCXT_reg_data16:
-			return c166_instr_reg_data16(instr, name, buf[1], rz_read_at_le16(buf, 2), false);
-		case C166_CMPD1_Rwn_data16:
-		case C166_CMPD2_Rwn_data16:
-		case C166_CMPI1_Rwn_data16:
-		case C166_CMPI2_Rwn_data16:
-			return c166_instr_rw_data16(instr, name, buf[1], rz_read_at_le16(buf, 2));
-		case C166_CMPD1_Rwn_mem:
-		case C166_CMPD2_Rwn_mem:
-		case C166_CMPI1_Rwn_mem:
-		case C166_CMPI2_Rwn_mem:
-			return c166_instr_rw_mem(instr, name, buf[1], rz_read_at_le16(buf, 2));
-		case C166_ADDB_reg_data8:
-		case C166_ADDCB_reg_data8:
-		case C166_SUBB_reg_data8:
-		case C166_SUBCB_reg_data8:
-		case C166_ANDB_reg_data8:
-		case C166_ORB_reg_data8:
-		case C166_XORB_reg_data8:
-		case C166_CMPB_reg_data8:
-		case C166_MOVB_reg_data8:
-			return c166_instr_reg_data8(instr, name, buf[1], rz_read_at_le16(buf, 2), true);
-		case C166_CALLS_seg_caddr:
-		case C166_JMPS_seg_caddr:
-			return c166_instr_seg_caddr(instr, name, buf[1], rz_read_at_le16(buf, 2));
-		case C166_CALLA_cc_caddr:
-		case C166_JMPA_cc_caddr:
-			return c166_instr_cc_caddr(instr, name, buf[1], rz_read_at_le16(buf, 2));
-		case C166_JB_bitaddr_rel:
-		case C166_JBC_bitaddr_rel:
-		case C166_JNB_bitaddr_rel:
-		case C166_JNBS_bitaddr_rel:
-			return c166_instr_bitaddr_rel(instr, name, buf[1], buf[2], buf[3]);
-		case C166_PCALL_reg_caddr:
-			return c166_instr_reg_caddr(instr, name, buf[1], rz_read_at_le16(buf, 2));
-		case C166_MOV_mem_oRwn:
-			return c166_instr_mov_mem_oRw(instr, "mov", buf[1], rz_read_at_le16(buf, 2), false);
-		case C166_MOV_oRwn_mem:
-			return c166_instr_mov_mem_oRw(instr, "mov", buf[1], rz_read_at_le16(buf, 2), true);
-		case C166_MOVB_mem_oRwn:
-			return c166_instr_mov_mem_oRw(instr, "movb", buf[1], rz_read_at_le16(buf, 2), false);
-		case C166_MOVB_oRwn_mem:
-			return c166_instr_mov_mem_oRw(instr, "movb", buf[1], rz_read_at_le16(buf, 2), true);
-		case C166_MOV_Rwn_oRwm_data16:
-			return c166_instr_mov_nm_data(instr, "mov", buf[1], rz_read_at_le16(buf, 2), c166_rw, false);
-		case C166_MOV_oRwm_data16_Rwn:
-			return c166_instr_mov_nm_data(instr, "mov", buf[1], rz_read_at_le16(buf, 2), c166_rw, true);
-		case C166_MOVB_Rbn_oRwm_data16:
-			return c166_instr_mov_nm_data(instr, "movb", buf[1], rz_read_at_le16(buf, 2), c166_rb, false);
-		case C166_MOVB_oRwm_data16_Rbn:
-			return c166_instr_mov_nm_data(instr, "movb", buf[1], rz_read_at_le16(buf, 2), c166_rb, true);
-		case C166_BAND_bitaddr_bitaddr:
-		case C166_BCMP_bitaddr_bitaddr:
-		case C166_BMOV_bitaddr_bitaddr:
-		case C166_BMOVN_bitaddr_bitaddr:
-		case C166_BOR_bitaddr_bitaddr:
-		case C166_BXOR_bitaddr_bitaddr:
-			return c166_instr_bitaddr_bitaddr(instr, name, buf[1], buf[2], buf[3]);
-		case C166_BFLDH_bitoff_x:
-			return c166_instr_bfld(instr, "bfldh", buf[1], buf[2], buf[3], true);
-		case C166_BFLDL_bitoff_x:
-			return c166_instr_bfld(instr, "bfldl", buf[1], buf[2], buf[3], false);
-		case C166_EXTP_or_EXTS_pag10_or_seg8_irang2: {
-			const ut8 sub_op = (buf[1] >> 6) & 0b11;
-			bool seg = (sub_op == 0b00) || (sub_op == 0b10);
-			return c166_instr_seg_or_pag_irang2(state, instr, c166_extx_names[sub_op], buf[1], rz_read_at_le16(buf, 2), seg);
-		}
-		case C166_SRST:
-			if ((buf[1] == 0x48) && (buf[2] == 0xB7) && (buf[3] == 0xB7))
-				return c166_instr_simple(instr, "srst", 4);
-			break;
-		case C166_IDLE:
-			if ((buf[1] == 0x78) && (buf[2] == 0x87) && (buf[3] == 0x87))
-				return c166_instr_simple(instr, "idle", 4);
-			break;
-		case C166_PWRDN:
-			if ((buf[1] == 0x68) && (buf[2] == 0x97) && (buf[3] == 0x97))
-				return c166_instr_simple(instr, "pwrdn", 4);
-			break;
-		case C166_SRVWDT:
-			if ((buf[1] == 0x58) && (buf[2] == 0xA7) && (buf[3] == 0xA7))
-				return c166_instr_simple(instr, "srvwdt", 4);
-			break;
-		case C166_DISWDT:
-			if ((buf[1] == 0x5A) && (buf[2] == 0xA5) && (buf[3] == 0xA5))
-				return c166_instr_simple(instr, "diswdt", 4);
-			break;
-		case C166_EINIT:
-			if ((buf[1] == 0x4A) && (buf[2] == 0xB5) && (buf[3] == 0xB5))
-				return c166_instr_simple(instr, "einit", 4);
-			break;
-		default:
-			break;
-		}
-	}
 	if (len >= 2) {
 		// Two byte instructions
 		switch (buf[0]) {
@@ -1390,6 +1241,155 @@ int c166_disassemble_instruction(RZ_NONNULL C166State* state, C166Instr* instr, 
 		case C166_RETI:
 			if (buf[1] == 0x88)
 				return c166_instr_simple(instr, "reti", 2);
+			break;
+		default:
+			break;
+		}
+	}
+	if (len >= 4) {
+		switch (buf[0]) {
+		case C166_ADD_reg_mem:
+		case C166_ADDC_reg_mem:
+		case C166_SUB_reg_mem:
+		case C166_SUBC_reg_mem:
+		case C166_AND_reg_mem:
+		case C166_OR_reg_mem:
+		case C166_XOR_reg_mem:
+		case C166_CMP_reg_mem:
+		case C166_MOV_reg_mem:
+		case C166_SCXT_reg_mem:
+			return c166_instr_reg_mem(instr, name, buf[1], rz_read_at_le16(buf, 2), false);
+		case C166_ADDB_reg_mem:
+		case C166_ADDCB_reg_mem:
+		case C166_SUBB_reg_mem:
+		case C166_SUBCB_reg_mem:
+		case C166_ANDB_reg_mem:
+		case C166_ORB_reg_mem:
+		case C166_XORB_reg_mem:
+		case C166_CMPB_reg_mem:
+		case C166_MOVB_reg_mem:
+		case C166_MOVBS_reg_mem:
+		case C166_MOVBZ_reg_mem:
+			return c166_instr_reg_mem(instr, name, buf[1], rz_read_at_le16(buf, 2), true);
+		case C166_ADD_mem_reg:
+		case C166_ADDC_mem_reg:
+		case C166_SUB_mem_reg:
+		case C166_SUBC_mem_reg:
+		case C166_AND_mem_reg:
+		case C166_OR_mem_reg:
+		case C166_XOR_mem_reg:
+		case C166_MOV_mem_reg:
+			return c166_instr_mem_reg(instr, name, buf[1], rz_read_at_le16(buf, 2), false);
+		case C166_ADDB_mem_reg:
+		case C166_ADDCB_mem_reg:
+		case C166_SUBB_mem_reg:
+		case C166_SUBCB_mem_reg:
+		case C166_ANDB_mem_reg:
+		case C166_ORB_mem_reg:
+		case C166_XORB_mem_reg:
+		case C166_MOVB_mem_reg:
+		case C166_MOVBS_mem_reg:
+		case C166_MOVBZ_mem_reg:
+			return c166_instr_mem_reg(instr, name, buf[1], rz_read_at_le16(buf, 2), true);
+		case C166_ADD_reg_data16:
+		case C166_ADDC_reg_data16:
+		case C166_SUB_reg_data16:
+		case C166_SUBC_reg_data16:
+		case C166_AND_reg_data16:
+		case C166_OR_reg_data16:
+		case C166_XOR_reg_data16:
+		case C166_CMP_reg_data16:
+		case C166_MOV_reg_data16:
+		case C166_SCXT_reg_data16:
+			return c166_instr_reg_data16(instr, name, buf[1], rz_read_at_le16(buf, 2), false);
+		case C166_CMPD1_Rwn_data16:
+		case C166_CMPD2_Rwn_data16:
+		case C166_CMPI1_Rwn_data16:
+		case C166_CMPI2_Rwn_data16:
+			return c166_instr_rw_data16(instr, name, buf[1], rz_read_at_le16(buf, 2));
+		case C166_CMPD1_Rwn_mem:
+		case C166_CMPD2_Rwn_mem:
+		case C166_CMPI1_Rwn_mem:
+		case C166_CMPI2_Rwn_mem:
+			return c166_instr_rw_mem(instr, name, buf[1], rz_read_at_le16(buf, 2));
+		case C166_ADDB_reg_data8:
+		case C166_ADDCB_reg_data8:
+		case C166_SUBB_reg_data8:
+		case C166_SUBCB_reg_data8:
+		case C166_ANDB_reg_data8:
+		case C166_ORB_reg_data8:
+		case C166_XORB_reg_data8:
+		case C166_CMPB_reg_data8:
+		case C166_MOVB_reg_data8:
+			return c166_instr_reg_data8(instr, name, buf[1], rz_read_at_le16(buf, 2), true);
+		case C166_CALLS_seg_caddr:
+		case C166_JMPS_seg_caddr:
+			return c166_instr_seg_caddr(instr, name, buf[1], rz_read_at_le16(buf, 2));
+		case C166_CALLA_cc_caddr:
+		case C166_JMPA_cc_caddr:
+			return c166_instr_cc_caddr(instr, name, buf[1], rz_read_at_le16(buf, 2));
+		case C166_JB_bitaddr_rel:
+		case C166_JBC_bitaddr_rel:
+		case C166_JNB_bitaddr_rel:
+		case C166_JNBS_bitaddr_rel:
+			return c166_instr_bitaddr_rel(instr, name, buf[1], buf[2], buf[3]);
+		case C166_PCALL_reg_caddr:
+			return c166_instr_reg_caddr(instr, name, buf[1], rz_read_at_le16(buf, 2));
+		case C166_MOV_mem_oRwn:
+			return c166_instr_mov_mem_oRw(instr, "mov", buf[1], rz_read_at_le16(buf, 2), false);
+		case C166_MOV_oRwn_mem:
+			return c166_instr_mov_mem_oRw(instr, "mov", buf[1], rz_read_at_le16(buf, 2), true);
+		case C166_MOVB_mem_oRwn:
+			return c166_instr_mov_mem_oRw(instr, "movb", buf[1], rz_read_at_le16(buf, 2), false);
+		case C166_MOVB_oRwn_mem:
+			return c166_instr_mov_mem_oRw(instr, "movb", buf[1], rz_read_at_le16(buf, 2), true);
+		case C166_MOV_Rwn_oRwm_data16:
+			return c166_instr_mov_nm_data(instr, "mov", buf[1], rz_read_at_le16(buf, 2), c166_rw, false);
+		case C166_MOV_oRwm_data16_Rwn:
+			return c166_instr_mov_nm_data(instr, "mov", buf[1], rz_read_at_le16(buf, 2), c166_rw, true);
+		case C166_MOVB_Rbn_oRwm_data16:
+			return c166_instr_mov_nm_data(instr, "movb", buf[1], rz_read_at_le16(buf, 2), c166_rb, false);
+		case C166_MOVB_oRwm_data16_Rbn:
+			return c166_instr_mov_nm_data(instr, "movb", buf[1], rz_read_at_le16(buf, 2), c166_rb, true);
+		case C166_BAND_bitaddr_bitaddr:
+		case C166_BCMP_bitaddr_bitaddr:
+		case C166_BMOV_bitaddr_bitaddr:
+		case C166_BMOVN_bitaddr_bitaddr:
+		case C166_BOR_bitaddr_bitaddr:
+		case C166_BXOR_bitaddr_bitaddr:
+			return c166_instr_bitaddr_bitaddr(instr, name, buf[1], buf[2], buf[3]);
+		case C166_BFLDH_bitoff_x:
+			return c166_instr_bfld(instr, "bfldh", buf[1], buf[2], buf[3], true);
+		case C166_BFLDL_bitoff_x:
+			return c166_instr_bfld(instr, "bfldl", buf[1], buf[2], buf[3], false);
+		case C166_EXTP_or_EXTS_pag10_or_seg8_irang2: {
+			const ut8 sub_op = (buf[1] >> 6) & 0b11;
+			bool seg = (sub_op == 0b00) || (sub_op == 0b10);
+			return c166_instr_seg_or_pag_irang2(state, instr, c166_extx_names[sub_op], buf[1], rz_read_at_le16(buf, 2), seg);
+		}
+		case C166_SRST:
+			if ((buf[1] == 0x48) && (buf[2] == 0xB7) && (buf[3] == 0xB7))
+				return c166_instr_simple(instr, "srst", 4);
+			break;
+		case C166_IDLE:
+			if ((buf[1] == 0x78) && (buf[2] == 0x87) && (buf[3] == 0x87))
+				return c166_instr_simple(instr, "idle", 4);
+			break;
+		case C166_PWRDN:
+			if ((buf[1] == 0x68) && (buf[2] == 0x97) && (buf[3] == 0x97))
+				return c166_instr_simple(instr, "pwrdn", 4);
+			break;
+		case C166_SRVWDT:
+			if ((buf[1] == 0x58) && (buf[2] == 0xA7) && (buf[3] == 0xA7))
+				return c166_instr_simple(instr, "srvwdt", 4);
+			break;
+		case C166_DISWDT:
+			if ((buf[1] == 0x5A) && (buf[2] == 0xA5) && (buf[3] == 0xA5))
+				return c166_instr_simple(instr, "diswdt", 4);
+			break;
+		case C166_EINIT:
+			if ((buf[1] == 0x4A) && (buf[2] == 0xB5) && (buf[3] == 0xB5))
+				return c166_instr_simple(instr, "einit", 4);
 			break;
 		default:
 			break;
