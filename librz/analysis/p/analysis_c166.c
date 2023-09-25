@@ -452,6 +452,15 @@ static void c166_op_mov_reg_mem(const RzAnalysis *analysis, RzAnalysisOp *op, co
 
 }
 
+static void c166_op_mov_mem_reg(const RzAnalysis *analysis, RzAnalysisOp *op, const C166Instr* instr, const ut8 *buf) {
+	op->type = RZ_ANALYSIS_OP_TYPE_MOV;
+	const bool byte = buf[0] != C166_MOV_mem_reg;
+	op->src[0] = c166_new_reg_value(analysis, buf[1], byte);
+	op->dst = c166_new_mem_value(analysis, instr, rz_read_at_le16(buf, 2));
+	if (op->src[0])
+		op->mmio_address = op->src[0]->base;
+}
+
 static void c166_op_bfld(const RzAnalysis *analysis, RzAnalysisOp *op, const C166Instr *instr,const ut8 *buf) {
 	op->type = RZ_ANALYSIS_OP_TYPE_STORE;
 	op->dst = c166_new_bitaddr_value(analysis, instr, buf[1]);
@@ -489,9 +498,9 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	if (len < 2) {
 		return -1;
 	}
-	// if (analysis->pcalign == 0) {
-	// 	analysis->pcalign = 2;
-	// }
+	if (analysis->pcalign == 0) {
+		analysis->pcalign = 2;
+	}
 	C166State *state = c166_get_state();
 	if (!state) {
 		RZ_LOG_FATAL("C166ExtState was NULL.");
@@ -802,11 +811,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_MOVB_mem_reg:
 	case C166_MOVBS_mem_reg:
 	case C166_MOVBZ_mem_reg:
-		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
-		op->src[0] = c166_new_reg_value(analysis, buf[1], buf[0] != C166_MOV_mem_reg);
-		op->dst = c166_new_mem_value(analysis, &instr, rz_read_at_le16(buf, 2));
-		if (op->dst)
-			op->mmio_address = op->dst->base;
+		c166_op_mov_mem_reg(analysis, op, &instr, buf);
 		break;
 	case C166_MOV_mem_oRwn:
 	case C166_MOVB_mem_oRwn:
@@ -1019,15 +1024,12 @@ static char *get_reg_profile(RzAnalysis *analysis) {
 static int archinfo(RzAnalysis *a, RzAnalysisInfoType query) {
 	switch (query) {
 	case RZ_ANALYSIS_ARCHINFO_MIN_OP_SIZE:
-		return -1;
+		return 2;
 	case RZ_ANALYSIS_ARCHINFO_MAX_OP_SIZE:
 		return 4;
 	case RZ_ANALYSIS_ARCHINFO_TEXT_ALIGN:
-		return -1;
 	case RZ_ANALYSIS_ARCHINFO_DATA_ALIGN:
-		return -1;
 	case RZ_ANALYSIS_ARCHINFO_CAN_USE_POINTERS:
-		return true;
 	default:
 		return -1;
 	}
