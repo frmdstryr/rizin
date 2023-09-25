@@ -137,6 +137,12 @@ static RzBinInfo *info(RzBinFile *arch) {
 	return ret;
 }
 
+static RzList /*<RzBinString *>*/ *strings(RzBinFile *bf) {
+	// we dont want to find strings in c166 bins because there are lot of false positives
+	return rz_list_newf((RzListFree)rz_bin_string_free);
+}
+
+
 struct rz_bin_plugin_t rz_bin_plugin_c166 = {
 	.name = "c166",
 	.desc = "Bosch/Siemens C166",
@@ -149,6 +155,7 @@ struct rz_bin_plugin_t rz_bin_plugin_c166 = {
 	.entries = NULL,
 	.sections = &sections,
 	.info = &info,
+	.strings = &strings,
 };
 
 #ifndef RZ_PLUGIN_INCORE
