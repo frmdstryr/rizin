@@ -107,15 +107,6 @@ static void c166_set_jump_target_from_caddr(RzAnalysisOp *op, ut16 target) {
 	op->jump = segment | (target & 0xFFFE);
 }
 
-static void c166_set_jump_target_from_orw(RzAnalysis *analysis, RzAnalysisOp *op, ut8 r) {
-	// TODO: Is this correct?
-	RzRegItem* cp_reg = rz_reg_get(analysis->reg, "CP", RZ_REG_TYPE_GPR);
-	RzRegItem* reg = rz_reg_get(analysis->reg, c166_rw[r & 0xF], RZ_REG_TYPE_GPR);
-	const ut16 v = rz_reg_get_value(analysis->reg, reg);
-	const ut16 cp = rz_reg_get_value(analysis->reg, cp_reg);
-	op->jump = cp + 2 * v;
-}
-
 static void c166_set_jump_target_seg_caddr(RzAnalysisOp *op, ut8 seg, ut16 target) {
 	// seg is the starting address of a 64K memory segment
 	// (0, 0x10000, 0x20000, 0x30000, ...).
@@ -327,8 +318,39 @@ static void c166_op_ext(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) 
 	// 	break;
 	// }
 	op->delay = irang2;
+	op->type = RZ_ANALYSIS_OP_TYPE_UNK; // TODO
 }
 
+static void c166_op_atomic_or_extr(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
+	op->type = RZ_ANALYSIS_OP_TYPE_UNK; // TODO
+}
+
+// Used to switch contexts for any register. Switching context is a
+// push and load operation. The contents of the register specified by
+// the first operand, op1, are pushed onto the stack. That register is
+// then loaded with the value specified by the second operand, op2.
+// SCXT op1, op2
+// SCXT reg, #data16 - C6 RR ## ##
+// SCXT reg, mem - D6 RR MM MM
+static void c166_op_scxt(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
+	// TODO: This is a register push and a register load in one instruction
+	op->type = RZ_ANALYSIS_OP_TYPE_UNK;
+	op->src[0] = c166_new_reg_value(analysis, buf[1], false);
+	if (buf[0] == C166_SCXT_reg_mem) {
+		const ut32 segment = op->addr & 0xFF0000;
+		op->val = segment || rz_read_at_le16(buf, 2);
+	} else {
+		op->val = rz_read_at_le16(buf, 2);
+	}
+	//op->hint.type = RZ_ANALYSIS_ADDR_HINT_TYPE_PTR;
+}
+
+// Branches unconditionally to the absolute address specified by op2
+// within the segment specified by op1.
+// JMPS op1, op2
+// CSP = op1
+// IP = op2
+// JMPS seg, caddr - FA SS MM MM
 static void c166_op_jmps_seg_caddr(RzAnalysisOp *op, const ut8 *buf) {
 	op->type = RZ_ANALYSIS_OP_TYPE_JMP;
 	const ut8 seg = buf[1];
@@ -375,6 +397,24 @@ static void c166_op_jmpr_cc_rel(RzAnalysisOp *op, const ut8 *buf) {
 	}
 }
 
+static void c166_op_jmpi_cc_orwn(RzAnalysis *analysis, RzAnalysisOp *op, const ut8 *buf) {
+	op->type = RZ_ANALYSIS_OP_TYPE_RCJMP;
+	op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
+	op->fail = op->addr + op->size;
+	// TODO: Is this correct?
+	RzRegItem* cp_reg = rz_reg_get(analysis->reg, "CP", RZ_REG_TYPE_GPR);
+	RzRegItem* reg = rz_reg_get(analysis->reg, c166_rw[buf[1] & 0xF], RZ_REG_TYPE_GPR);
+	if (cp_reg && reg) {
+		op->ireg = reg->name;
+		const ut16 v = rz_reg_get_value(analysis->reg, reg);
+		const ut16 cp = rz_reg_get_value(analysis->reg, cp_reg);
+		op->jump = cp + 2 * v;
+	}
+	//const ut32 segment = op->addr & 0xFF0000;
+	//op->ptr = segment; // TODO: Is this correct ???
+}
+
+
 static void c166_op_call_seg_caddr(RzAnalysisOp *op, const ut8 *buf) {
 	op->type = RZ_ANALYSIS_OP_TYPE_CALL;
 	const ut8 seg = buf[1];
@@ -410,6 +450,13 @@ static void c166_op_call_cc_caddr(RzAnalysisOp *op, const ut8 *buf) {
 	op->type = RZ_ANALYSIS_OP_TYPE_CCALL;
 	op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
 	c166_set_jump_target_from_caddr(op, rz_read_at_le16(buf, 2));
+	op->fail = op->addr + op->size;
+}
+
+static void c166_op_call_cc_rwn(RzAnalysisOp *op, const ut8 *buf) {
+	op->type = RZ_ANALYSIS_OP_TYPE_IRCALL;
+	op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
+	op->reg = c166_rw[buf[1] & 0xF];
 	op->fail = op->addr + op->size;
 }
 
@@ -720,11 +767,15 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		if (op->dst)
 			op->mmio_address = op->dst->base;
 		break;
+	case C166_BCMP_bitaddr_bitaddr:
+		op->type = RZ_ANALYSIS_OP_TYPE_CMP;
+		break;
 	case C166_RET:
 		c166_op_ret(analysis, op, buf);
 		break;
 	case C166_RETI:
 		op->type = RZ_ANALYSIS_OP_TYPE_RET;
+		op->family = RZ_ANALYSIS_OP_FAMILY_PRIV;
 		break;
 	case C166_RETS:
 		c166_op_rets(analysis, op, buf);
@@ -746,7 +797,6 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_SHL_Rwn_data4:
 		op->type = RZ_ANALYSIS_OP_TYPE_SHL;
 		break;
-
 	case C166_ASHR_Rwn_Rwm:
 	case C166_SHR_Rwn_Rwm:
 		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_SHR, false);
@@ -767,7 +817,6 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_ROR_Rwn_data4:
 		op->type = RZ_ANALYSIS_OP_TYPE_ROR;
 		break;
-
 	case C166_MOV_Rwn_Rwm:
 		c166_op_rn_rm(analysis, op, buf[1], RZ_ANALYSIS_OP_TYPE_MOV, false);
 		break;
@@ -794,6 +843,8 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_MOV_oRwm_data16_Rwn:
 	case C166_MOVB_Rbn_oRwm_data16:
 	case C166_MOVB_oRwm_data16_Rbn:
+	case C166_MOVBS_reg_mem:
+	case C166_MOVBZ_reg_mem:
 		op->type = RZ_ANALYSIS_OP_TYPE_MOV;
 		break;
 	case C166_MOV_reg_data16:
@@ -802,9 +853,6 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		break;
 	case C166_MOV_reg_mem:
 	case C166_MOVB_reg_mem:
-	// TODO: Sign/zero extend with esil
-	// case C166_MOVBS_reg_mem:
-	// case C166_MOVBZ_reg_mem:
 		c166_op_mov_reg_mem(analysis, op, &instr, buf);
 		break;
 	case C166_MOV_mem_reg:
@@ -862,7 +910,6 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		op->type = RZ_ANALYSIS_OP_TYPE_CMP;
 		op->reg = c166_rb[(buf[1] >> 4) & 0xF];
 		break;
-
 	case C166_CMPD1_Rwn_mem:
 	case C166_CMPD2_Rwn_mem:
 	case C166_CMPI1_Rwn_mem:
@@ -896,10 +943,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		op->fail = addr + op->size;
 		break;
 	case C166_JMPI_cc_oRwn: {
-		op->type = RZ_ANALYSIS_OP_TYPE_CJMP;
-		op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
-		c166_set_jump_target_from_orw(analysis, op, buf[1]);
-		op->fail = addr + op->size;
+		c166_op_jmpi_cc_orwn(analysis, op, buf);
 		break;
 	}
 	case C166_JMPR_cc_C_or_ULT_rel:
@@ -920,12 +964,6 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_JMPR_cc_V_rel:
 		c166_op_jmpr_cc_rel(op, buf);
 		break;
-	// Branches unconditionally to the absolute address specified by op2
-	// within the segment specified by op1.
-	// JMPS op1, op2
-	// CSP = op1
-	// IP = op2
-	// JMPS seg, caddr - FA SS MM MM
 	case C166_JMPS_seg_caddr:
 		c166_op_jmps_seg_caddr(op, buf);
 		break;
@@ -933,10 +971,7 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 		c166_op_call_cc_caddr(op, buf);
 		break;
 	case C166_CALLI_cc_Rwn:
-		op->type = RZ_ANALYSIS_OP_TYPE_IRCALL;
-		op->cond = c166_cc_to_cond((buf[1] >> 4) & 0xF);
-		op->reg = c166_rw[buf[1] & 0xF];
-		op->fail = addr + op->size;
+		c166_op_call_cc_rwn(op, buf);
 		break;
 	case C166_CALLR_rel:
 		c166_op_call_rel(op, buf);
@@ -953,9 +988,21 @@ static int c166_op(RzAnalysis *analysis, RzAnalysisOp *op, ut64 addr, const ut8 
 	case C166_EXTP_or_EXTS_pag10_or_seg8_irang2:
 		c166_op_ext(analysis, op, buf);
 		break;
+	case C166_ATOMIC_or_EXTR_irang2:
+		c166_op_atomic_or_extr(analysis, op, buf);
+		break;
+	case C166_SCXT_reg_mem:
+	case C166_SCXT_reg_data16:
+		c166_op_scxt(analysis, op, buf);
+		break;
+	case C166_PRIOR_Rwn_Rwm:
+		op->type = RZ_ANALYSIS_OP_TYPE_LOAD; // TODO ???
+		break;
+	case C166_EINIT:
+		op->type = RZ_ANALYSIS_OP_TYPE_UNK; // TODO ???
+		break;
 
 	}
-	//rz_strbuf_fini(&op->esil);
 	return op->size;
 }
 
