@@ -359,6 +359,8 @@ static void c166_op_jmps_seg_caddr(RzAnalysisOp *op, const ut8 *buf) {
 	rz_strbuf_setf(
 		&op->esil,
 		"0x%02x,CSP,=,0x%04x,IP,=,0x%" PFMT64x ",PC,=", seg, caddr, op->jump);
+	op->hint.type = RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION;
+	op->hint.fcn = op->jump;
 }
 
 static void c166_op_jmpr_cc_rel(RzAnalysisOp *op, const ut8 *buf) {

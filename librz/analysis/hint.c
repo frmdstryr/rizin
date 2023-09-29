@@ -276,6 +276,10 @@ RZ_API void rz_analysis_hint_set_val(RzAnalysis *a, ut64 addr, ut64 v) {
 	SET_HINT(RZ_ANALYSIS_ADDR_HINT_TYPE_VAL, r->val = v;);
 }
 
+RZ_API void rz_analysis_hint_set_function(RzAnalysis *a, ut64 addr, ut64 fcn) {
+	SET_HINT(RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION, r->fcn = fcn;);
+}
+
 RZ_API void rz_analysis_hint_set_arch(RzAnalysis *a, ut64 addr, RZ_NULLABLE const char *arch) {
 	RzAnalysisArchHintRecord *record = (RzAnalysisArchHintRecord *)ensure_ranged_hint_record(&a->arch_hints, addr, sizeof(RzAnalysisArchHintRecord));
 	if (!record) {
@@ -350,6 +354,10 @@ RZ_API void rz_analysis_hint_unset_newbits(RzAnalysis *a, ut64 addr) {
 
 RZ_API void rz_analysis_hint_unset_val(RzAnalysis *a, ut64 addr) {
 	unset_addr_hint_record(a, RZ_ANALYSIS_ADDR_HINT_TYPE_VAL, addr);
+}
+
+RZ_API void rz_analysis_hint_unset_function(RzAnalysis *a, ut64 addr) {
+	unset_addr_hint_record(a, RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION, addr);
 }
 
 RZ_API void rz_analysis_hint_unset_type(RzAnalysis *a, ut64 addr) {
@@ -499,6 +507,9 @@ static void hint_merge(RzAnalysisHint *hint, RzAnalysisAddrHintRecord *record) {
 		break;
 	case RZ_ANALYSIS_ADDR_HINT_TYPE_VAL:
 		hint->val = record->val;
+		break;
+	case RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION:
+		hint->fcn = record->fcn;
 		break;
 	}
 }

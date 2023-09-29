@@ -540,7 +540,8 @@ typedef enum rz_analysis_addr_hint_type_t {
 	RZ_ANALYSIS_ADDR_HINT_TYPE_TYPE_OFFSET,
 	RZ_ANALYSIS_ADDR_HINT_TYPE_ESIL,
 	RZ_ANALYSIS_ADDR_HINT_TYPE_HIGH,
-	RZ_ANALYSIS_ADDR_HINT_TYPE_VAL
+	RZ_ANALYSIS_ADDR_HINT_TYPE_VAL,
+	RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION,
 } RzAnalysisAddrHintType;
 
 typedef struct rz_analysis_addr_hint_record_t {
@@ -550,6 +551,7 @@ typedef struct rz_analysis_addr_hint_record_t {
 		int nword;
 		ut64 jump;
 		ut64 fail;
+		ut64 fcn;
 		int newbits;
 		int immbase;
 		ut64 ptr;
@@ -567,6 +569,7 @@ typedef struct rz_analysis_addr_hint_record_t {
 typedef struct rz_analysis_hint_t {
 	ut64 addr;
 	ut64 ptr;
+	ut64 fcn;
 	ut64 val; // used to hint jmp rax
 	ut64 jump;
 	ut64 fail;
@@ -1949,9 +1952,11 @@ RZ_API void rz_analysis_hint_set_ret(RzAnalysis *a, ut64 addr, ut64 val);
 RZ_API void rz_analysis_hint_set_high(RzAnalysis *a, ut64 addr);
 RZ_API void rz_analysis_hint_set_stackframe(RzAnalysis *a, ut64 addr, ut64 size);
 RZ_API void rz_analysis_hint_set_val(RzAnalysis *a, ut64 addr, ut64 v);
+RZ_API void rz_analysis_hint_set_function(RzAnalysis *a, ut64 addr, ut64 ptr);
 RZ_API void rz_analysis_hint_set_arch(RzAnalysis *a, ut64 addr, RZ_NULLABLE const char *arch); // arch == NULL => use global default
 RZ_API void rz_analysis_hint_set_bits(RzAnalysis *a, ut64 addr, int bits); // bits == NULL => use global default
 RZ_API void rz_analysis_hint_unset_val(RzAnalysis *a, ut64 addr);
+RZ_API void rz_analysis_hint_unset_function(RzAnalysis *a, ut64 addr);
 RZ_API void rz_analysis_hint_unset_high(RzAnalysis *a, ut64 addr);
 RZ_API void rz_analysis_hint_unset_immbase(RzAnalysis *a, ut64 addr);
 RZ_API void rz_analysis_hint_unset_nword(RzAnalysis *a, ut64 addr);

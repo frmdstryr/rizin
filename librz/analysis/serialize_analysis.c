@@ -1672,6 +1672,9 @@ static bool hints_acc_store_cb(void *user, const ut64 addr, const void *v) {
 			case RZ_ANALYSIS_ADDR_HINT_TYPE_VAL:
 				pj_kn(j, "val", record->val);
 				break;
+			case RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION:
+				pj_kn(j, "fcn", record->fcn);
+				break;
 			}
 		}
 	}

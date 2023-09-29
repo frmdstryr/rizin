@@ -1149,6 +1149,9 @@ static void print_hint_h_format(HintNode *node) {
 			case RZ_ANALYSIS_ADDR_HINT_TYPE_VAL:
 				rz_cons_printf(" val=0x%08" PFMT64x, record->val);
 				break;
+			case RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION:
+				rz_cons_printf(" fcn=0x%08" PFMT64x, record->fcn);
+				break;
 			}
 		}
 		break;
@@ -1231,6 +1234,9 @@ static void hint_node_print(HintNode *node, RzOutputMode mode, PJ *pj) {
 				case RZ_ANALYSIS_ADDR_HINT_TYPE_VAL:
 					// no command for this
 					break;
+				case RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION:
+					rz_cons_printf("af+ 0x%" PFMT64x " fcn.%" PFMT64x, record->fcn, record->fcn);
+					break;
 				}
 			}
 			break;
@@ -1301,6 +1307,9 @@ static void hint_node_print(HintNode *node, RzOutputMode mode, PJ *pj) {
 					break;
 				case RZ_ANALYSIS_ADDR_HINT_TYPE_VAL:
 					pj_kn(pj, "val", record->val);
+					break;
+				case RZ_ANALYSIS_ADDR_HINT_TYPE_FUNCTION:
+					pj_kn(pj, "fcn", record->fcn);
 					break;
 				}
 			}
